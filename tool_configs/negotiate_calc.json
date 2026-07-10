@@ -1,0 +1,33 @@
+{
+  "name": "negotiate_calc",
+  "type": "webhook",
+  "description": "Calculates the next counter-offer given the consumer's proposed payment and account balance. Must be called before stating any counter-offer to the consumer. Never invent numbers.",
+  "api_schema": {
+    "url": "https://YOUR_NESTJS_HOST/negotiations/calculate",
+    "method": "POST",
+    "request_body_schema": {
+      "type": "object",
+      "properties": {
+        "account_balance": { "type": "number", "description": "Total outstanding debt amount" },
+        "consumer_offer": { "type": "number", "description": "Amount the consumer just proposed" },
+        "attempt_no": { "type": "integer", "description": "Negotiation round, 1 or 2" }
+      },
+      "required": ["account_balance", "consumer_offer", "attempt_no"]
+    },
+    "response_schema": {
+      "type": "object",
+      "properties": {
+        "counter_offer": { "type": "number" },
+        "counter_offer_pct": { "type": "number", "description": "counter_offer as a percentage of account_balance, e.g. 25 means 25%" },
+        "plan_type": {
+          "type": "string",
+          "enum": ["full_payment", "downpayment_plus_one", "settlement", "payment_plan", "below_floor"]
+        },
+        "meets_floor": { "type": "boolean", "description": "True if smallest payment >= 25% of balance" },
+        "max_installments": { "type": "integer" },
+        "discount_pct": { "type": "number" }
+      }
+    }
+  },
+  "timeout_secs": 8
+}

@@ -1,0 +1,32 @@
+{
+    "name": "sample_test",
+    "chat_history": [
+        {
+            "role": "user",
+            "time_in_call_secs": 1,
+            "message": "Hello"
+        }
+    ],
+    "success_condition": "The agent responds in a helpful and professional manner",
+    "success_examples": [
+        {
+            "response": "Hello! How can I help you today?",
+            "type": "success"
+        },
+        {
+            "response": "Hi there! I'm here to assist you.",
+            "type": "success"
+        }
+    ],
+    "failure_examples": [
+        {
+            "response": "I don't understand",
+            "type": "failure"
+        },
+        {
+            "response": "Error",
+            "type": "failure"
+        }
+    ],
+    "type": "llm"
+}

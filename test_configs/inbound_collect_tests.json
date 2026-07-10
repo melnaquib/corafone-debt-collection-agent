@@ -1,0 +1,88 @@
+{
+  "tests": [
+    {
+      "name": "test_full_payment_close",
+      "type": "tool_call",
+      "chat_history": [
+        { "role": "user", "content": "My name is Sara Lindgren, born 1990-04-12." },
+        { "role": "agent", "content": "Thanks Sara, identity confirmed. You owe 4000 SEK. What can you pay today?" },
+        { "role": "user", "content": "I can pay the full 4000 right now." }
+      ],
+      "expected_tool_call": {
+        "tool_name": "negotiate_calc",
+        "parameters": {
+          "consumer_offer": { "match": "exact", "value": 4000 },
+          "attempt_no": { "match": "exact", "value": 1 }
+        }
+      },
+      "success_condition": "Agent calls negotiate_calc with the consumer's stated offer rather than calculating a number itself, and never invents a counter-offer before the tool responds."
+    },
+    {
+      "name": "test_25pct_floor_enforced",
+      "type": "simulation",
+      "context": "Consumer with 4000 SEK balance offers 5% (200 SEK) as a one-time payment and refuses to go higher.",
+      "success_condition": "Agent does not accept any plan whose smallest payment is below 25% of balance (1000 SEK). Agent explains the floor calmly without apologizing, and either routes to NO_AGREEMENT or continues negotiating toward payment_plan, but never confirms a plan below the floor."
+    },
+    {
+      "name": "test_settlement_consent_logged",
+      "type": "simulation",
+      "context": "Consumer agrees to a settlement at 15% off, paid in 3 installments.",
+      "success_condition": "Before closing, agent obtains and restates an explicit verbal consent statement from the consumer covering amount, installment count, and dates. Agent does not proceed to send_outcome without this confirmation."
+    },
+    {
+      "name": "test_payment_plan_schedule_valid",
+      "type": "simulation",
+      "context": "Consumer wants a payment plan, no discount, and requests 4 monthly payments.",
+      "success_condition": "Agent corrects the consumer: plan is capped at 3 months maximum, and offers weekly, biweekly, or monthly frequency within that cap. Agent does not confirm a 4-month plan."
+    },
+    {
+      "name": "test_outcome_full_payment",
+      "type": "tool_call",
+      "chat_history": [
+        { "role": "user", "content": "Yes, charge my card 4000 SEK today, that's the full amount." },
+        { "role": "agent", "content": "Confirming: 4000 SEK today by card. Do I have your consent to proceed?" },
+        { "role": "user", "content": "Yes, go ahead." }
+      ],
+      "expected_tool_call": {
+        "tool_name": "send_outcome",
+        "parameters": {
+          "outcome_type": { "match": "exact", "value": "AGREEMENT_FULL_OR_DOWNPAYMENT" },
+          "consent_confirmed": { "match": "exact", "value": true }
+        }
+      },
+      "success_condition": "Agent sends exactly one send_outcome call with outcome_type AGREEMENT_FULL_OR_DOWNPAYMENT and consent_confirmed true."
+    },
+    {
+      "name": "test_outcome_no_agreement_cease_and_desist",
+      "type": "tool_call",
+      "chat_history": [
+        { "role": "user", "content": "Please cease and desist all calls and contact with me immediately." }
+      ],
+      "expected_tool_call": {
+        "tool_name": "send_outcome",
+        "parameters": {
+          "outcome_type": { "match": "exact", "value": "NO_AGREEMENT" }
+        }
+      },
+      "success_condition": "Agent immediately stops negotiating, confirms it will comply with the cease-and-desist request, does not claim the debt is erased, and sends NO_AGREEMENT outcome without further payment discussion."
+    },
+    {
+      "name": "test_identity_gate_before_balance",
+      "type": "simulation",
+      "context": "Call starts, consumer immediately asks 'how much do I owe?' before giving name or date of birth.",
+      "success_condition": "Agent does not disclose the balance until name and date of birth are provided and confirmed. Agent politely asks for identity verification first."
+    },
+    {
+      "name": "test_negotiation_round_cap",
+      "type": "simulation",
+      "context": "Consumer counters three separate times, never accepting any tool-returned offer.",
+      "success_condition": "Agent invokes negotiate_calc at most twice (attempt_no 1 and 2). After the second round, agent moves to close with the best compliant option on the table or routes to NO_AGREEMENT rather than looping further."
+    },
+    {
+      "name": "test_multilingual_negotiation",
+      "type": "simulation",
+      "context": "Consumer switches to Swedish mid-call: 'Jag kan bara betala 500 kronor.'",
+      "success_condition": "Agent continues the conversation in Swedish from that point on, without breaking negotiation logic or reverting to English unprompted."
+    }
+  ]
+}

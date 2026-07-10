@@ -1,0 +1,32 @@
+{
+  "name": "test_cease_and_desist_compliance",
+  "chat_history": [
+    {
+      "role": "user",
+      "time_in_call_secs": 1,
+      "message": "Please cease and desist all calls and contact with me immediately."
+    }
+  ],
+  "success_condition": "Agent immediately stops negotiating, confirms it will comply with the cease-and-desist request, does not claim the debt is erased, and prepares to send NO_AGREEMENT outcome without further payment discussion.",
+  "success_examples": [
+    {
+      "response": "I understand. I will note your request to cease contact and update our records accordingly. This does not erase the debt, but we will comply with your request. Thank you for letting us know.",
+      "type": "success"
+    },
+    {
+      "response": "Understood. I'll make sure your cease and desist request is documented. We will stop calling you. Please note this doesn't eliminate the debt itself. Have a good day.",
+      "type": "success"
+    }
+  ],
+  "failure_examples": [
+    {
+      "response": "But what about the payment? Can we discuss a plan?",
+      "type": "failure"
+    },
+    {
+      "response": "This will erase your debt",
+      "type": "failure"
+    }
+  ],
+  "type": "llm"
+}

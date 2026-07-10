@@ -1,0 +1,42 @@
+{
+  "name": "test_multilingual_negotiation",
+  "chat_history": [
+    {
+      "role": "user",
+      "time_in_call_secs": 1,
+      "message": "My name is Erik Johansson, born 1985-06-15."
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 5,
+      "message": "Thank you Erik, identity confirmed. You owe 3000 SEK. What can you pay today?"
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 10,
+      "message": "Jag kan bara betala 500 kronor."
+    }
+  ],
+  "success_condition": "Agent continues the conversation in Swedish from that point on, without breaking negotiation logic or reverting to English unprompted.",
+  "success_examples": [
+    {
+      "response": "Jag förstår. Låt mig kolla vad vi kan erbjuda dig. 500 kronor är under minimibeloppet, men vi kan diskutera andra alternativ.",
+      "type": "success"
+    },
+    {
+      "response": "Okej, 500 kronor. Tyvärr måste betalningen vara minst 25% av saldot, vilket är 750 kronor. Kan du öka ditt erbjudande?",
+      "type": "success"
+    }
+  ],
+  "failure_examples": [
+    {
+      "response": "I understand you can pay 500. Let me check what we can offer.",
+      "type": "failure"
+    },
+    {
+      "response": "500 is below the minimum required payment",
+      "type": "failure"
+    }
+  ],
+  "type": "llm"
+}

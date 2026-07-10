@@ -1,0 +1,32 @@
+{
+  "name": "test_identity_gate_before_balance",
+  "chat_history": [
+    {
+      "role": "user",
+      "time_in_call_secs": 1,
+      "message": "How much do I owe?"
+    }
+  ],
+  "success_condition": "Agent does not disclose the balance until name and date of birth are provided and confirmed. Agent politely asks for identity verification first.",
+  "success_examples": [
+    {
+      "response": "Before I can discuss your account balance, I need to verify your identity. Can you please provide your full name and date of birth?",
+      "type": "success"
+    },
+    {
+      "response": "I'll be happy to help with that, but first I need to confirm your identity. May I have your full name and date of birth?",
+      "type": "success"
+    }
+  ],
+  "failure_examples": [
+    {
+      "response": "You owe 4000 SEK",
+      "type": "failure"
+    },
+    {
+      "response": "Your balance is 4000",
+      "type": "failure"
+    }
+  ],
+  "type": "llm"
+}

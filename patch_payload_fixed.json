@@ -1,0 +1,225 @@
+{
+  "conversation_config": {
+    "agent": {
+      "language": "en",
+      "first_message": "Hi, this is Alex from Corafone. This call may be recorded for quality purposes \u2014 is that alright with you? This call is an attempt to collect a debt, and any information obtained will be used for that purpose.",
+      "prompt": {
+        "prompt": "You are Alex, a calm professional debt negotiator for Corafone. Global rules that always apply: never say a payment erases or resets the debt; never imply legal action beyond what's true; mirror the consumer's language if they switch (e.g. Swedish, Norwegian) and keep negotiating in that language; one idea per turn.",
+        "llm": "gemini-2.0-flash",
+        "temperature": 0.6,
+        "tool_ids": [
+          "tool_4401kx63h1wefdpbkdw4c8hx8ms8",
+          "tool_1301kx64yft7fcca1bms595t8xte"
+        ]
+      },
+      "max_conversation_duration_message": "I need to wrap up \u2014 let's lock in the plan we discussed now, or I can have someone call you back."
+    },
+    "tts": {
+      "voice_id": "21m00Tcm4TlvDq8ikWAM"
+    },
+    "conversation": {
+      "max_duration_seconds": 300
+    }
+  },
+  "workflow": {
+    "nodes": [
+      {
+        "id": "start_node",
+        "type": "start"
+      },
+      {
+        "id": "disclosure_identity",
+        "type": "override_agent",
+        "label": "Disclosure + Identity",
+        "additional_prompt": "Confirm the consumer consents to the recorded call. Then verify identity: ask for full name and date of birth. Do not disclose any balance or account detail until identity is confirmed. If they refuse recording, offer a non-recorded callback and end.",
+        "additional_tool_ids": [],
+        "entry_behavior": "wait_for_user"
+      },
+      {
+        "id": "capture_offer",
+        "type": "override_agent",
+        "label": "Capture Offer",
+        "additional_prompt": "State the balance owed. Ask what the consumer can pay today. Anchor high: mention full payment as the first, preferred option before any discount. Capture their answer as consumer_offer \u2014 do not calculate anything yourself.",
+        "additional_tool_ids": []
+      },
+      {
+        "id": "calc_negotiation",
+        "type": "dispatch_tool",
+        "label": "Calculate Counter-Offer (Round 1)",
+        "tool_name": "tool_4401kx63h1wefdpbkdw4c8hx8ms8",
+        "tool_params": {
+          "account_balance": "{{account_balance}}",
+          "consumer_offer": "{{consumer_offer}}",
+          "attempt_no": 1
+        },
+        "success_edge": "present_counter",
+        "failure_edge": "no_agreement"
+      },
+      {
+        "id": "present_counter",
+        "type": "override_agent",
+        "label": "Present Counter-Offer",
+        "additional_prompt": "State the counter-offer returned by the tool as your number, not one you invented. If they push back, either hold firm (restate the value of settling now, calmly, don't repeat the same line twice) or offer a creative trade (e.g. biweekly instead of monthly, or a different due date) for a higher amount, before ever discounting further. If they go quiet after you state the number, wait \u2014 do not fill silence by lowering it yourself.",
+        "additional_tool_ids": []
+      },
+      {
+        "id": "calc_negotiation_2",
+        "type": "dispatch_tool",
+        "label": "Calculate Counter-Offer (Round 2)",
+        "tool_name": "tool_4401kx63h1wefdpbkdw4c8hx8ms8",
+        "tool_params": {
+          "account_balance": "{{account_balance}}",
+          "consumer_offer": "{{consumer_offer_round2}}",
+          "attempt_no": 2
+        },
+        "success_edge": "route_outcome",
+        "failure_edge": "no_agreement"
+      },
+      {
+        "id": "route_outcome",
+        "type": "override_agent",
+        "label": "Route to Outcome",
+        "additional_prompt": "Get explicit verbal confirmation of amount, payment method, and date before closing. Do not take the first maybe as a yes.",
+        "additional_tool_ids": []
+      },
+      {
+        "id": "close_full_payment",
+        "type": "override_agent",
+        "label": "Close: Full / Downpayment+1",
+        "additional_prompt": "Confirm full payment or highest downpayment plus one more payment. Restate amount, date(s), payment method. Provide a confirmation reference.",
+        "additional_tool_ids": []
+      },
+      {
+        "id": "close_settlement",
+        "type": "override_agent",
+        "label": "Close: Settlement",
+        "additional_prompt": "Confirm settlement terms: up to 20% off, max 3 payments. Read back the schedule and get an explicit logged verbal consent statement from the consumer before finishing.",
+        "additional_tool_ids": []
+      },
+      {
+        "id": "close_payment_plan",
+        "type": "override_agent",
+        "label": "Close: Payment Plan",
+        "additional_prompt": "Confirm payment plan: no discount, max 3 months, weekly/biweekly/monthly. Smallest payment must be at least 25% of balance. Read back the full schedule.",
+        "additional_tool_ids": []
+      },
+      {
+        "id": "no_agreement",
+        "type": "override_agent",
+        "label": "No Agreement",
+        "additional_prompt": "The consumer could not meet the 25% floor, asked to cease contact, or no resolution was reached. Stay calm and respectful. If cease-and-desist was invoked, confirm compliance and do not negotiate further. Otherwise offer a callback.",
+        "additional_tool_ids": []
+      },
+      {
+        "id": "send_outcome_node",
+        "type": "dispatch_tool",
+        "label": "Send Outcome",
+        "tool_name": "tool_1301kx64yft7fcca1bms595t8xte",
+        "success_edge": "end_node",
+        "failure_edge": "end_node"
+      },
+      {
+        "id": "end_node",
+        "type": "end"
+      }
+    ],
+    "edges": [
+      {
+        "from": "start_node",
+        "to": "disclosure_identity",
+        "type": "unconditional"
+      },
+      {
+        "from": "disclosure_identity",
+        "to": "capture_offer",
+        "type": "llm",
+        "condition": "identity verified and consumer consents to continue"
+      },
+      {
+        "from": "disclosure_identity",
+        "to": "no_agreement",
+        "type": "llm",
+        "condition": "consumer refuses recording or cannot verify identity"
+      },
+      {
+        "from": "capture_offer",
+        "to": "calc_negotiation",
+        "type": "unconditional"
+      },
+      {
+        "from": "present_counter",
+        "to": "calc_negotiation_2",
+        "type": "llm",
+        "condition": "consumer counters with a different amount"
+      },
+      {
+        "from": "present_counter",
+        "to": "route_outcome",
+        "type": "llm",
+        "condition": "consumer accepts or clearly rejects entirely"
+      },
+      {
+        "from": "route_outcome",
+        "to": "close_full_payment",
+        "type": "expression",
+        "condition": "plan_type == 'full_payment' || plan_type == 'downpayment_plus_one'"
+      },
+      {
+        "from": "route_outcome",
+        "to": "close_settlement",
+        "type": "expression",
+        "condition": "plan_type == 'settlement'"
+      },
+      {
+        "from": "route_outcome",
+        "to": "close_payment_plan",
+        "type": "expression",
+        "condition": "plan_type == 'payment_plan'"
+      },
+      {
+        "from": "route_outcome",
+        "to": "no_agreement",
+        "type": "expression",
+        "condition": "plan_type == 'below_floor' || meets_floor == false"
+      },
+      {
+        "from": "disclosure_identity",
+        "to": "no_agreement",
+        "type": "llm",
+        "condition": "consumer says cease and desist / stop calling"
+      },
+      {
+        "from": "capture_offer",
+        "to": "no_agreement",
+        "type": "llm",
+        "condition": "consumer says cease and desist / stop calling"
+      },
+      {
+        "from": "present_counter",
+        "to": "no_agreement",
+        "type": "llm",
+        "condition": "consumer says cease and desist / stop calling"
+      },
+      {
+        "from": "close_full_payment",
+        "to": "send_outcome_node",
+        "type": "unconditional"
+      },
+      {
+        "from": "close_settlement",
+        "to": "send_outcome_node",
+        "type": "unconditional"
+      },
+      {
+        "from": "close_payment_plan",
+        "to": "send_outcome_node",
+        "type": "unconditional"
+      },
+      {
+        "from": "no_agreement",
+        "to": "send_outcome_node",
+        "type": "unconditional"
+      }
+    ]
+  }
+}

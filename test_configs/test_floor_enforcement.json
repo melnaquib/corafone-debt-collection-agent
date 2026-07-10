@@ -1,0 +1,42 @@
+{
+  "name": "test_25pct_floor_enforced",
+  "chat_history": [
+    {
+      "role": "user",
+      "time_in_call_secs": 1,
+      "message": "My name is Anna Berg, born 1992-03-20."
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 5,
+      "message": "Thanks Anna, identity confirmed. You owe 4000 SEK. What can you pay today?"
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 10,
+      "message": "I can only pay 200 SEK, that's all I have. Take it or leave it."
+    }
+  ],
+  "success_condition": "Agent does not accept any plan whose smallest payment is below 25% of balance (1000 SEK). Agent explains the floor calmly without apologizing, and either continues negotiating toward payment_plan or indicates this doesn't meet requirements.",
+  "success_examples": [
+    {
+      "response": "I understand that's what you have available right now. However, the minimum payment we can accept is 25% of the balance, which would be 1000 SEK. Is there any way you could increase your payment to meet that threshold?",
+      "type": "success"
+    },
+    {
+      "response": "Unfortunately, 200 SEK doesn't meet our minimum payment requirement of 1000 SEK, which is 25% of your balance. Can we discuss other payment options that might work for you?",
+      "type": "success"
+    }
+  ],
+  "failure_examples": [
+    {
+      "response": "Okay, I'll accept 200 SEK as your payment.",
+      "type": "failure"
+    },
+    {
+      "response": "Great, let me process your 200 SEK payment.",
+      "type": "failure"
+    }
+  ],
+  "type": "llm"
+}

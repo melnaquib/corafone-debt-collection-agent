@@ -1,0 +1,26 @@
+{
+  "name": "send_outcome",
+  "type": "webhook",
+  "description": "Sends the final call outcome to the downstream system. Call exactly once, at the end of the call, with exactly one of the three outcome types.",
+  "api_schema": {
+    "url": "https://YOUR_NESTJS_HOST/negotiations/outcome",
+    "method": "POST",
+    "request_body_schema": {
+      "type": "object",
+      "properties": {
+        "outcome_type": {
+          "type": "string",
+          "enum": ["AGREEMENT_FULL_OR_DOWNPAYMENT", "AGREEMENT_SETTLEMENT_OR_PLAN", "NO_AGREEMENT"]
+        },
+        "amount": { "type": "number" },
+        "plan_type": { "type": "string" },
+        "installments": { "type": "integer" },
+        "frequency": { "type": "string", "enum": ["weekly", "biweekly", "monthly", "n_a"] },
+        "consent_confirmed": { "type": "boolean" },
+        "notes": { "type": "string" }
+      },
+      "required": ["outcome_type", "consent_confirmed"]
+    }
+  },
+  "timeout_secs": 8
+}

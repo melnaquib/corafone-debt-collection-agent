@@ -1,0 +1,37 @@
+{
+    "tests": [
+        {
+            "config": "test_configs/sample_test.json",
+            "type": "basic-llm",
+            "id": "test_1701kx685v3jeqy8j84j19jfpnca"
+        },
+        {
+            "config": "test_configs/test_identity_verification.json",
+            "id": "test_6701kx68827vfjqagq1tyegwybr9"
+        },
+        {
+            "config": "test_configs/test_cease_and_desist.json",
+            "id": "test_7301kx6882e5fb785vnvdgbaxzta"
+        },
+        {
+            "config": "test_configs/test_multilingual.json",
+            "id": "test_8501kx6882kxeq6rvt8jfdthtxnt"
+        },
+        {
+            "config": "test_configs/test_floor_enforcement.json",
+            "id": "test_2501kx68831hfzaagtt0m1v5q7xj"
+        },
+        {
+            "config": "test_configs/test_swedish_start.json",
+            "id": "test_7201kx68snztea9b3zjs3jzys4xh"
+        },
+        {
+            "config": "test_configs/test_norwegian_switch.json",
+            "id": "test_4901kx68sp5gfv9vt5tt7xedg7cg"
+        },
+        {
+            "config": "test_configs/test_swedish_negotiation_full.json",
+            "id": "test_1201kx68spc1e1q982a64xv461h8"
+        }
+    ]
+}

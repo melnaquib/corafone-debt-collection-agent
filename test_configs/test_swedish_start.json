@@ -1,0 +1,32 @@
+{
+  "name": "test_swedish_from_start",
+  "chat_history": [
+    {
+      "role": "user",
+      "time_in_call_secs": 1,
+      "message": "Hallå, vem är det?"
+    }
+  ],
+  "success_condition": "Agent detects Swedish language and responds entirely in Swedish, maintaining professional debt collection protocol in Swedish language.",
+  "success_examples": [
+    {
+      "response": "Hej, det här är Alex från Corafone. Det här samtalet kan spelas in i kvalitetssyfte - är det okej för dig? Det här samtalet är ett försök att driva in en skuld, och all information som erhålls kommer att användas för det syftet.",
+      "type": "success"
+    },
+    {
+      "response": "God dag, jag heter Alex och ringer från Corafone. Samtalet kan komma att spelas in - godkänner du det? Detta är ett inkassosamtal.",
+      "type": "success"
+    }
+  ],
+  "failure_examples": [
+    {
+      "response": "Hi, this is Alex from Corafone",
+      "type": "failure"
+    },
+    {
+      "response": "Hello, who is this?",
+      "type": "failure"
+    }
+  ],
+  "type": "llm"
+}

@@ -1,0 +1,30 @@
+{
+  "type": "conversation",
+  "name": "test_full_payment_close",
+  "agent_id": "agent_0901kx61mf5xf8fayvqyn7pgh2tc",
+  "description": "Test that agent calls negotiate_calc when consumer offers full payment",
+  "conversation": [
+    {
+      "role": "user",
+      "content": "My name is Sara Lindgren, born 1990-04-12."
+    },
+    {
+      "role": "agent",
+      "content": "Thanks Sara, identity confirmed. You owe 4000 SEK. What can you pay today?"
+    },
+    {
+      "role": "user",
+      "content": "I can pay the full 4000 right now."
+    }
+  ],
+  "assertions": [
+    {
+      "type": "tool_call",
+      "tool_name": "negotiate_calc",
+      "parameters": {
+        "consumer_offer": 4000,
+        "attempt_no": 1
+      }
+    }
+  ]
+}

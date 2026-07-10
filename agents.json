@@ -1,0 +1,16 @@
+{
+    "agents": [
+        {
+            "config": "agent_configs/inbound_collect.json",
+            "id": "agent_0901kx61mf5xf8fayvqyn7pgh2tc",
+            "version_id": "agtvrsn_8501kx68gb0nftmrh05vtjqrf2wt",
+            "branch_id": "agtbrch_9501kx61mgqcf0wbs2nfhj4b15rg"
+        },
+        {
+            "config": "agent_configs/Accounting-Tax-Firm-Receptionist.json",
+            "id": "agent_0301kx44zjhze5ktv9ewdsqbvyvw",
+            "version_id": "agtvrsn_0101kx44zjm6ekcvqz4930aepc1v",
+            "branch_id": "agtbrch_5801kx44zjj0ewct1e7fz6jrm1bv"
+        }
+    ]
+}

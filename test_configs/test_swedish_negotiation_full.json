@@ -1,0 +1,42 @@
+{
+  "name": "test_swedish_full_negotiation",
+  "chat_history": [
+    {
+      "role": "user",
+      "time_in_call_secs": 1,
+      "message": "Mitt namn är Karin Andersson, född 1985-07-14."
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 5,
+      "message": "Tack Karin, identitet bekräftad. Du är skyldig 3600 SEK. Vad kan du betala idag?"
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 10,
+      "message": "Jag kan betala hela beloppet, 3600 kronor, direkt."
+    }
+  ],
+  "success_condition": "Agent continues in Swedish, confirms full payment, requests explicit consent in Swedish, and routes to full payment closure without switching back to English.",
+  "success_examples": [
+    {
+      "response": "Perfekt, 3600 kronor för full betalning. Bekräftar: 3600 SEK idag med kort. Har jag ditt samtycke att gå vidare?",
+      "type": "success"
+    },
+    {
+      "response": "Utmärkt, hela beloppet 3600 kronor. Låt mig bekräfta: 3600 SEK betalas idag. Godkänner du att vi behandlar denna betalning?",
+      "type": "success"
+    }
+  ],
+  "failure_examples": [
+    {
+      "response": "Great, I'll confirm the full payment of 3600 SEK.",
+      "type": "failure"
+    },
+    {
+      "response": "Perfect, let me process that full payment.",
+      "type": "failure"
+    }
+  ],
+  "type": "llm"
+}

@@ -1,0 +1,42 @@
+{
+  "name": "test_norwegian_language_switch",
+  "chat_history": [
+    {
+      "role": "user",
+      "time_in_call_secs": 1,
+      "message": "My name is Lars Hansen, born 1988-11-22."
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 5,
+      "message": "Thanks Lars, identity confirmed. You owe 5000 NOK. What can you pay today?"
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 10,
+      "message": "Jeg kan betale 1500 kroner nå med en gang."
+    }
+  ],
+  "success_condition": "Agent switches to Norwegian when consumer uses Norwegian, continues negotiation in Norwegian, and calls negotiate_calc tool with the 1500 offer.",
+  "success_examples": [
+    {
+      "response": "Takk, 1500 kroner. La meg sjekke hva vi kan tilby deg. Dette oppfyller minimumskravet vårt. Jeg skal bare beregne det beste alternativet for deg.",
+      "type": "success"
+    },
+    {
+      "response": "Bra, 1500 kroner. Det er 30% av saldoen din. La meg se hva vi kan gjøre med det beløpet.",
+      "type": "success"
+    }
+  ],
+  "failure_examples": [
+    {
+      "response": "Okay, 1500. Let me check what we can offer you.",
+      "type": "failure"
+    },
+    {
+      "response": "Thank you, I'll process that payment of 1500.",
+      "type": "failure"
+    }
+  ],
+  "type": "llm"
+}

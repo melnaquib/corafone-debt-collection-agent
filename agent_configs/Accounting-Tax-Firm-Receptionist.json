@@ -1,0 +1,655 @@
+{
+    "name": "Accounting / Tax Firm Receptionist",
+    "conversation_config": {
+        "asr": {
+            "quality": "high",
+            "provider": "scribe_realtime",
+            "user_input_audio_format": "pcm_16000",
+            "keywords": []
+        },
+        "turn": {
+            "turn_timeout": 7,
+            "silence_end_call_timeout": -1,
+            "mode": "turn",
+            "turn_eagerness": "normal",
+            "spelling_patience": "auto",
+            "speculative_turn": true,
+            "retranscribe_on_turn_timeout": false,
+            "turn_model": "turn_v2",
+            "interruption_ignore_terms": [],
+            "interruption_ignore_term_languages": [],
+            "transcribe_on_disabled_interruptions": false,
+            "soft_timeout_config": {
+                "timeout_seconds": -1,
+                "message": "Hhmmmm...yeah.",
+                "additional_soft_timeout_messages": [],
+                "use_llm_generated_message": false,
+                "randomize_fillers": false,
+                "max_soft_timeouts_per_generation": 1
+            }
+        },
+        "tts": {
+            "model_id": "eleven_v3_conversational",
+            "voice_id": "56bWURjYFHyYyVf490Dp",
+            "supported_voices": [],
+            "expressive_mode": true,
+            "suggested_audio_tags": [
+                {
+                    "tag": "professional"
+                },
+                {
+                    "tag": "knowledgeable"
+                },
+                {
+                    "tag": "efficient"
+                }
+            ],
+            "agent_output_audio_format": "pcm_16000",
+            "optimize_streaming_latency": 3,
+            "stability": 0.5,
+            "speed": 1,
+            "similarity_boost": 0.8,
+            "text_normalisation_type": "system_prompt",
+            "pronunciation_dictionary_locators": [],
+            "enable_phoneme_tags": false,
+            "audio_filter": null
+        },
+        "conversation": {
+            "text_only": false,
+            "max_duration_seconds": 1800,
+            "client_events": [
+                "audio",
+                "interruption",
+                "agent_response",
+                "user_transcript",
+                "agent_response_correction",
+                "agent_tool_response"
+            ],
+            "file_input": {
+                "enabled": true,
+                "max_files_per_conversation": 10
+            },
+            "monitoring_enabled": false,
+            "monitoring_events": [
+                "user_transcript",
+                "agent_response",
+                "agent_response_correction"
+            ],
+            "dtmf_input_settings": null,
+            "background_sound": {
+                "volume": 0.6,
+                "crossfade_loop": false
+            },
+            "source_attribution": false
+        },
+        "language_presets": {},
+        "vad": {
+            "background_voice_detection": false
+        },
+        "agent": {
+            "first_message": "Thank you for calling the firm... how can I help?",
+            "language": "en",
+            "hinglish_mode": false,
+            "dynamic_variables": {
+                "dynamic_variable_placeholders": {}
+            },
+            "disable_first_message_interruptions": false,
+            "max_conversation_duration_message": "",
+            "prompt": {
+                "prompt": "# Personality\n\nYou are a knowledgeable and efficient CPA firm receptionist who knows tax season inside and out. You handle the busy season rush with grace, making clients feel valued even when the office is slammed.\n\n# Environment\n\nYou handle inbound calls for an accounting or tax preparation firm. Callers include existing clients wanting to schedule appointments or check on document status, new prospective clients wanting to learn about services, and people with general tax deadline questions. You have a knowledge base with tax deadlines, required documents by return type, firm services and pricing, and accountant profiles. This is a phone call.\n\n# Tone\n\n- Be polished and efficient: \"Thank you for calling the firm — how can I help you today?\"\n- For existing clients: \"Welcome back! Let me pull up your info. Are you calling to schedule your tax prep appointment?\"\n- For new clients: be welcoming and informative. \"Great, let me tell you a bit about how we work and what you'll need to bring\"\n- When asked about deadlines: be precise. \"The federal filing deadline is April 15th. If you're filing for an extension, that form is due the same day and gives you until October 15th\"\n- For document questions: \"For a standard personal return, you'll need your W-2s, 1099s, mortgage interest statement, and any charitable donation receipts. I can email you the full checklist\"\n- Be efficient during busy season — clients appreciate quick, accurate answers\n- Natural language: \"Let me check on that...\", \"Perfect, I've got you down for...\"\n\n# Goal\n\nFor existing clients: verify their identity, check which CPA they work with, and either schedule an appointment, take a message, or transfer to their accountant. For new clients: collect name, phone, email, whether this is for a business or personal return, the return type, and schedule an initial appointment with the right CPA. For general questions: answer from the KB (deadlines, required documents, pricing). Always mention the document checklist when scheduling.\n\n# Guardrails\n\n- Never provide specific tax advice, interpret tax law, or recommend filing strategies — that's the CPA's job\n- Do not share other clients' information or appointment schedules\n- If someone calls about an audit or IRS notice, route them immediately to a CPA — do not attempt to advise\n- Do not promise specific refund amounts or timelines",
+                "llm": "gemini-3.5-flash",
+                "opener": null,
+                "enable_reasoning_summary": false,
+                "temperature": 0.3,
+                "max_tokens": -1,
+                "tool_ids": [],
+                "built_in_tools": {
+                    "end_call": {
+                        "type": "system",
+                        "name": "end_call",
+                        "description": "End the call",
+                        "response_timeout_secs": 20,
+                        "disable_interruptions": false,
+                        "interruption_mode": "allow",
+                        "force_pre_tool_speech": false,
+                        "pre_tool_speech": "auto",
+                        "assignments": [],
+                        "tool_call_sound_behavior": "auto",
+                        "tool_error_handling_mode": "auto",
+                        "params": {
+                            "system_tool_type": "end_call"
+                        }
+                    },
+                    "language_detection": {
+                        "type": "system",
+                        "name": "language_detection",
+                        "description": "Detect the user's language and switch to it.",
+                        "response_timeout_secs": 20,
+                        "disable_interruptions": false,
+                        "interruption_mode": "allow",
+                        "force_pre_tool_speech": false,
+                        "pre_tool_speech": "auto",
+                        "assignments": [],
+                        "tool_call_sound_behavior": "auto",
+                        "tool_error_handling_mode": "auto",
+                        "params": {
+                            "system_tool_type": "language_detection"
+                        }
+                    },
+                    "transfer_to_number": {
+                        "type": "system",
+                        "name": "transfer_to_number",
+                        "description": "Route to CPA",
+                        "response_timeout_secs": 20,
+                        "disable_interruptions": false,
+                        "interruption_mode": "allow",
+                        "force_pre_tool_speech": false,
+                        "pre_tool_speech": "auto",
+                        "assignments": [],
+                        "tool_call_sound_behavior": "auto",
+                        "tool_error_handling_mode": "auto",
+                        "params": {
+                            "system_tool_type": "transfer_to_number",
+                            "transfers": [
+                                {
+                                    "custom_sip_headers": [],
+                                    "transfer_destination": {
+                                        "type": "phone",
+                                        "phone_number": "+1234567890"
+                                    },
+                                    "transfer_type": "conference",
+                                    "require_acceptance": false,
+                                    "phone_number": "+1234567890",
+                                    "condition": "Needs accountant"
+                                }
+                            ],
+                            "enable_client_message": true
+                        }
+                    },
+                    "update_state": null,
+                    "memory_entry_search": null,
+                    "memory_entry_create": null,
+                    "memory_entry_update": null,
+                    "memory_entry_delete": null,
+                    "agent_prompt_change": null,
+                    "procedure_update": null,
+                    "procedure_create": null,
+                    "procedure_delete": null,
+                    "transfer_to_genesys_chat": null,
+                    "run_subagent": null
+                },
+                "enable_parallel_tool_calls": false,
+                "mcp_server_ids": [],
+                "native_mcp_server_ids": [],
+                "knowledge_base": [],
+                "speech_engine": null,
+                "ignore_default_personality": false,
+                "rag": {
+                    "enabled": false,
+                    "embedding_model": "e5_mistral_7b_instruct",
+                    "optional_rag_enabled": false,
+                    "max_vector_distance": 0.6,
+                    "max_documents_length": 50000,
+                    "max_retrieved_rag_chunks_count": 20
+                },
+                "backup_llm_config": {
+                    "preference": "default"
+                },
+                "cascade_timeout_seconds": 8,
+                "tools": [
+                    {
+                        "type": "system",
+                        "name": "end_call",
+                        "description": "End the call",
+                        "response_timeout_secs": 20,
+                        "disable_interruptions": false,
+                        "interruption_mode": "allow",
+                        "force_pre_tool_speech": false,
+                        "pre_tool_speech": "auto",
+                        "assignments": [],
+                        "tool_call_sound_behavior": "auto",
+                        "tool_error_handling_mode": "auto",
+                        "params": {
+                            "system_tool_type": "end_call"
+                        }
+                    },
+                    {
+                        "type": "system",
+                        "name": "language_detection",
+                        "description": "Detect the user's language and switch to it.",
+                        "response_timeout_secs": 20,
+                        "disable_interruptions": false,
+                        "interruption_mode": "allow",
+                        "force_pre_tool_speech": false,
+                        "pre_tool_speech": "auto",
+                        "assignments": [],
+                        "tool_call_sound_behavior": "auto",
+                        "tool_error_handling_mode": "auto",
+                        "params": {
+                            "system_tool_type": "language_detection"
+                        }
+                    },
+                    {
+                        "type": "system",
+                        "name": "transfer_to_number",
+                        "description": "Route to CPA",
+                        "response_timeout_secs": 20,
+                        "disable_interruptions": false,
+                        "interruption_mode": "allow",
+                        "force_pre_tool_speech": false,
+                        "pre_tool_speech": "auto",
+                        "assignments": [],
+                        "tool_call_sound_behavior": "auto",
+                        "tool_error_handling_mode": "auto",
+                        "params": {
+                            "system_tool_type": "transfer_to_number",
+                            "transfers": [
+                                {
+                                    "custom_sip_headers": [],
+                                    "transfer_destination": {
+                                        "type": "phone",
+                                        "phone_number": "+1234567890"
+                                    },
+                                    "transfer_type": "conference",
+                                    "require_acceptance": false,
+                                    "phone_number": "+1234567890",
+                                    "condition": "Needs accountant"
+                                }
+                            ],
+                            "enable_client_message": true
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "platform_settings": {
+        "evaluation": {
+            "criteria": []
+        },
+        "widget": {
+            "variant": "full",
+            "placement": "bottom-right",
+            "expandable": "never",
+            "avatar": {
+                "type": "orb",
+                "color1": "#2792dc",
+                "color2": "#9ce6e6"
+            },
+            "feedback_mode": "none",
+            "end_feedback": {
+                "type": "rating"
+            },
+            "bg_color": "#ffffff",
+            "text_color": "#000000",
+            "btn_color": "#000000",
+            "btn_text_color": "#ffffff",
+            "border_color": "#e1e1e1",
+            "focus_color": "#000000",
+            "shareable_page_show_terms": true,
+            "show_avatar_when_collapsed": false,
+            "disable_banner": false,
+            "markdown_link_allowed_hosts": [],
+            "markdown_link_include_www": true,
+            "markdown_link_allow_http": true,
+            "mic_muting_enabled": false,
+            "transcript_enabled": false,
+            "text_input_enabled": true,
+            "conversation_mode_toggle_enabled": false,
+            "default_expanded": false,
+            "always_expanded": false,
+            "dismissible": false,
+            "show_agent_status": false,
+            "show_conversation_id": true,
+            "strip_audio_tags": true,
+            "text_contents": {},
+            "styles": {},
+            "language_selector": false,
+            "supports_text_only": true,
+            "language_presets": {}
+        },
+        "data_collection": {
+            "client": {
+                "type": "string",
+                "description": "Client name",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "allowed_values_dynamic_variable": "",
+                "constant_value": "",
+                "is_omitted": false
+            },
+            "phone": {
+                "type": "string",
+                "description": "Phone",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "allowed_values_dynamic_variable": "",
+                "constant_value": "",
+                "is_omitted": false
+            },
+            "type": {
+                "type": "string",
+                "description": "New/existing",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "allowed_values_dynamic_variable": "",
+                "constant_value": "",
+                "is_omitted": false
+            },
+            "return_type": {
+                "type": "string",
+                "description": "Personal/business",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "allowed_values_dynamic_variable": "",
+                "constant_value": "",
+                "is_omitted": false
+            },
+            "appointment": {
+                "type": "string",
+                "description": "Date booked",
+                "is_system_provided": false,
+                "dynamic_variable": "",
+                "allowed_values_dynamic_variable": "",
+                "constant_value": "",
+                "is_omitted": false
+            }
+        },
+        "data_collection_scopes": {},
+        "overrides": {
+            "conversation_config_override": {
+                "asr": {
+                    "keywords": false
+                },
+                "turn": {
+                    "soft_timeout_config": {
+                        "message": false
+                    }
+                },
+                "tts": {
+                    "voice_id": false,
+                    "stability": false,
+                    "speed": false,
+                    "similarity_boost": false
+                },
+                "conversation": {
+                    "text_only": true
+                },
+                "agent": {
+                    "first_message": false,
+                    "language": false,
+                    "max_conversation_duration_message": false,
+                    "prompt": {
+                        "prompt": false,
+                        "llm": false,
+                        "tool_ids": false,
+                        "native_mcp_server_ids": false,
+                        "knowledge_base": false
+                    }
+                }
+            },
+            "custom_llm_extra_body": false,
+            "enable_conversation_initiation_client_data_from_webhook": false,
+            "enable_starting_workflow_node_id_from_client": false
+        },
+        "workspace_overrides": {
+            "webhooks": {
+                "events": [
+                    "transcript"
+                ],
+                "transcript_format": "json",
+                "send_audio": false
+            }
+        },
+        "testing": {
+            "attached_tests": [],
+            "referenced_tests_ids": []
+        },
+        "archived": false,
+        "guardrails": {
+            "version": "1",
+            "focus": {
+                "is_enabled": true
+            },
+            "prompt_injection": {
+                "is_enabled": true
+            },
+            "content": {
+                "execution_mode": "streaming",
+                "config": {
+                    "sexual": {
+                        "is_enabled": false,
+                        "threshold": "medium"
+                    },
+                    "violence": {
+                        "is_enabled": false,
+                        "threshold": "medium"
+                    },
+                    "harassment": {
+                        "is_enabled": true,
+                        "threshold": 0.5
+                    },
+                    "self_harm": {
+                        "is_enabled": false,
+                        "threshold": "medium"
+                    },
+                    "profanity": {
+                        "is_enabled": false,
+                        "threshold": "medium"
+                    },
+                    "religion_or_politics": {
+                        "is_enabled": false,
+                        "threshold": "medium"
+                    },
+                    "medical_and_legal_information": {
+                        "is_enabled": false,
+                        "threshold": "medium"
+                    }
+                },
+                "trigger_action": {
+                    "type": "end_call"
+                }
+            },
+            "moderation": null,
+            "custom": {
+                "config": {
+                    "configs": []
+                }
+            }
+        },
+        "auth": {
+            "enable_auth": false,
+            "allowlist": [],
+            "require_origin_header": false
+        },
+        "call_limits": {
+            "agent_concurrency_limit": -1,
+            "daily_limit": 100000,
+            "bursting_enabled": true
+        },
+        "ban": null,
+        "smb_metadata": null,
+        "privacy": {
+            "record_voice": true,
+            "retention_days": -1,
+            "delete_transcript_and_pii": false,
+            "delete_audio": false,
+            "apply_to_existing_conversations": false,
+            "zero_retention_mode": false,
+            "conversation_history_redaction": {
+                "enabled": false,
+                "entities": []
+            }
+        },
+        "trust_context": "unknown",
+        "analysis_llm": "gemini-2.5-flash",
+        "topic_discovery": {
+            "enabled": true
+        },
+        "sentiment_analysis": {
+            "enabled": false
+        },
+        "alerting": null,
+        "overview_dashboard_template_id": null,
+        "safety": {
+            "is_blocked_ivc": false,
+            "is_blocked_non_ivc": false,
+            "ignore_safety_evaluation": false
+        }
+    },
+    "tags": [
+        "example",
+        "finance",
+        "accounting"
+    ],
+    "workflow": {
+        "edges": {
+            "s": {
+                "source": "start_node",
+                "target": "greeting",
+                "forward_condition": {
+                    "type": "unconditional"
+                }
+            },
+            "ge": {
+                "source": "greeting",
+                "target": "existing",
+                "forward_condition": {
+                    "type": "llm",
+                    "condition": "Existing client"
+                }
+            },
+            "gn": {
+                "source": "greeting",
+                "target": "new_client",
+                "forward_condition": {
+                    "type": "llm",
+                    "condition": "New client"
+                }
+            },
+            "es": {
+                "source": "existing",
+                "target": "schedule",
+                "forward_condition": {
+                    "type": "llm",
+                    "condition": "Needs appointment"
+                }
+            },
+            "ns": {
+                "source": "new_client",
+                "target": "schedule",
+                "forward_condition": {
+                    "type": "llm",
+                    "condition": "Info collected"
+                }
+            },
+            "ee": {
+                "source": "existing",
+                "target": "end",
+                "forward_condition": {
+                    "type": "llm",
+                    "condition": "Message taken"
+                }
+            },
+            "se": {
+                "source": "schedule",
+                "target": "end",
+                "forward_condition": {
+                    "type": "llm",
+                    "condition": "Booked"
+                }
+            }
+        },
+        "nodes": {
+            "start_node": {
+                "type": "start",
+                "position": {
+                    "x": 0,
+                    "y": 0
+                },
+                "edge_order": [
+                    "s"
+                ]
+            },
+            "greeting": {
+                "type": "override_agent",
+                "position": {
+                    "x": 0,
+                    "y": 300
+                },
+                "edge_order": [
+                    "ge",
+                    "gn"
+                ],
+                "conversation_config": {},
+                "additional_prompt": "Warmly greet. Determine: existing client (verify identity) or new caller. Capture name first.\n\nIMPORTANT: NEVER provide specific tax advice — that's the CPA's job. If the caller asks to be removed from a list or wants to end the call, briefly acknowledge and call end_call.",
+                "additional_knowledge_base": [],
+                "additional_tool_ids": [],
+                "label": "Greeting",
+                "entry_behavior": "auto"
+            },
+            "existing": {
+                "type": "override_agent",
+                "position": {
+                    "x": -400,
+                    "y": 600
+                },
+                "edge_order": [
+                    "es",
+                    "ee"
+                ],
+                "conversation_config": {},
+                "additional_prompt": "Verify identity (full name + DOB + which CPA they work with). Determine: scheduling, message for accountant, or general account question. NEVER share other clients' info.",
+                "additional_knowledge_base": [],
+                "additional_tool_ids": [],
+                "label": "Existing",
+                "entry_behavior": "auto"
+            },
+            "new_client": {
+                "type": "override_agent",
+                "position": {
+                    "x": 400,
+                    "y": 600
+                },
+                "edge_order": [
+                    "ns"
+                ],
+                "conversation_config": {},
+                "additional_prompt": "Collect: name, phone, email, business vs personal return, return type. Mention the document checklist they'll need. Route to scheduling.",
+                "additional_knowledge_base": [],
+                "additional_tool_ids": [],
+                "label": "New Client",
+                "entry_behavior": "auto"
+            },
+            "schedule": {
+                "type": "override_agent",
+                "position": {
+                    "x": -400,
+                    "y": 900
+                },
+                "edge_order": [
+                    "se"
+                ],
+                "conversation_config": {},
+                "additional_prompt": "Confirm CPA, date/time, return type, and read back the appointment. Mention what to bring. Then call end_call to hang up.",
+                "additional_knowledge_base": [],
+                "additional_tool_ids": [
+                    "tool_9001kpeebks8fnctbp0jp0c87185",
+                    "tool_8501kpeebkzsf8w81cjcvfy68w8e"
+                ],
+                "label": "Schedule",
+                "entry_behavior": "auto"
+            },
+            "end": {
+                "type": "end",
+                "position": {
+                    "x": 0,
+                    "y": 1200
+                },
+                "edge_order": [],
+                "return_when_nested": true
+            }
+        },
+        "prevent_subagent_loops": false
+    }
+}
