@@ -77,16 +77,16 @@
       "background_voice_detection": false
     },
     "agent": {
-      "first_message": "Hi, this is Alex from Corafone. This call may be recorded for quality purposes \u2014 is that alright with you? This call is an attempt to collect a debt, and any information obtained will be used for that purpose.",
+      "first_message": "Hi, this is Alex from Accord. This call may be recorded for quality purposes — is that alright with you? This call is an attempt to collect a debt, and any information obtained will be used for that purpose.",
       "language": "en",
       "hinglish_mode": false,
       "dynamic_variables": {
         "dynamic_variable_placeholders": {}
       },
       "disable_first_message_interruptions": false,
-      "max_conversation_duration_message": "I need to wrap up \u2014 let's lock in the plan we discussed now, or I can have someone call you back.",
+      "max_conversation_duration_message": "I need to wrap up — let's lock in the plan we discussed now, or I can have someone call you back.",
       "prompt": {
-        "prompt": "You are Alex, a calm professional debt negotiator for Corafone.\n\nLanguage Rule: If the consumer speaks in Spanish, Arabic, or any other language, IMMEDIATELY switch to that language and STAY in that language for the ENTIRE conversation. NEVER revert to English unless the consumer explicitly switches back. You are fluent in English, Spanish (Español), and Arabic (العربية).\n\nCease-and-Desist Compliance: If the consumer says 'cease and desist', 'stop calling', 'do not contact me', or any similar request to stop contact (in ANY language), immediately:\n1. Stop all negotiation discussion\n2. Politely acknowledge their request\n3. Confirm you will comply\n4. State clearly this does NOT erase the debt\n5. End the call WITHOUT any further payment discussion\n\nGlobal rules that always apply:\n- Never say a payment erases or resets the debt\n- Never imply legal action beyond what's true\n- One idea per turn\n- Always use negotiate_calc tool before presenting counter-offers",
+        "prompt": "You are Alex, a calm professional debt negotiator for Accord.\n\nIdentity Verification (CRITICAL - MUST FOLLOW):\n1. After consent, collect full name and date of birth\n2. Call id_challenge tool with that information\n3. Ask the consumer the security question returned by the tool\n4. Call id_approve tool with the challenge_id and their answer\n5. ONLY if verified=true: Call get_debt_details with consumer_id to get account balance\n6. NEVER disclose any balance or debt information before successful verification\n7. If verification fails, do NOT proceed with debt discussion\n\nLanguage Rule: If the consumer speaks in Spanish, Arabic, or any other language, IMMEDIATELY switch to that language and STAY in that language for the ENTIRE conversation. NEVER revert to English unless the consumer explicitly switches back. You are fluent in English, Spanish (Español), and Arabic (العربية).\n\nCease-and-Desist Compliance: If the consumer says 'cease and desist', 'stop calling', 'do not contact me', or any similar request to stop contact (in ANY language), immediately:\n1. Stop all negotiation discussion\n2. Politely acknowledge their request\n3. Confirm you will comply\n4. State clearly this does NOT erase the debt\n5. End the call WITHOUT any further payment discussion\n\nGlobal rules that always apply:\n- Never say a payment erases or resets the debt\n- Never imply legal action beyond what's true\n- One idea per turn\n- Always use negotiate_calc tool before presenting counter-offers\n- NEVER discuss account balance before calling get_debt_details",
         "llm": "gemini-2.0-flash",
         "opener": null,
         "enable_reasoning_summary": false,
@@ -131,7 +131,7 @@
           {
             "type": "webhook",
             "name": "negotiate_calc",
-            "description": "Calculates the next counter-offer given the consumer's proposed payment and account balance. Must be called before stating any counter-offer to the consumer. Never invent numbers \u2014 always use this tool's response.",
+            "description": "Calculates the next counter-offer given the consumer's proposed payment and account balance. Must be called before stating any counter-offer to the consumer. Never invent numbers — always use this tool's response.",
             "response_timeout_secs": 20,
             "disable_interruptions": false,
             "interruption_mode": "allow",
@@ -158,7 +158,7 @@
                   "consumer_offer",
                   "attempt_no"
                 ],
-                "description": "Top-level body description (separate from each property's own description) \u2014 one line summarizing the whole payload's purpose:\n\n**`negotiate_calc`**\n> \"Request to calculate a compliant counter-offer based on the consumer's payment offer, the account balance, and how many negotiation rounds have happened so far.\"\n\n**`send_outcome`**\n> \"Final call result to log and route downstream \u2014 exactly one outcome type plus the agreed payment details, sent once at call end.\"\n\nIf the form only has one description slot per param (not a separate top-level one) and you're filling it for a specific param right now, tell me which param and which tool and I'll give the exact line for that slot.",
+                "description": "Top-level body description (separate from each property's own description) — one line summarizing the whole payload's purpose:\n\n**`negotiate_calc`**\n> \"Request to calculate a compliant counter-offer based on the consumer's payment offer, the account balance, and how many negotiation rounds have happened so far.\"\n\n**`send_outcome`**\n> \"Final call result to log and route downstream — exactly one outcome type plus the agreed payment details, sent once at call end.\"\n\nIf the form only has one description slot per param (not a separate top-level one) and you're filling it for a specific param right now, tell me which param and which tool and I'll give the exact line for that slot.",
                 "properties": {
                   "account_balance": {
                     "type": "number",
@@ -220,7 +220,7 @@
                   "outcome_type",
                   "consent_confirmed"
                 ],
-                "description": "Final call result to log and route downstream \u2014 exactly one outcome type plus the agreed payment details, sent once at call end.",
+                "description": "Final call result to log and route downstream — exactly one outcome type plus the agreed payment details, sent once at call end.",
                 "properties": {
                   "outcome_type": {
                     "type": "string",
@@ -296,6 +296,160 @@
                   "notes": {
                     "type": "string",
                     "description": "Brief free-text summary of what happened, especially if no agreement was reached.",
+                    "is_system_provided": false,
+                    "dynamic_variable": "",
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "is_omitted": false
+                  }
+                }
+              },
+              "content_type": "application/json",
+              "auth_resolved_params": []
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "id_challenge",
+            "id": "tool_5001kx6t1zgvfskr1b3bxavstrcw",
+            "description": "Generate an identity verification challenge question after collecting the consumer's full name and date of birth. MUST be called before disclosing any account balance or debt information. Returns a challenge_id and security question to ask.",
+            "response_timeout_secs": 20,
+            "disable_interruptions": false,
+            "interruption_mode": "allow",
+            "force_pre_tool_speech": false,
+            "pre_tool_speech": "auto",
+            "assignments": [],
+            "tool_call_sound_behavior": "auto",
+            "tool_error_handling_mode": "auto",
+            "dynamic_variables": {
+              "dynamic_variable_placeholders": {}
+            },
+            "execution_mode": "immediate",
+            "api_schema": {
+              "request_headers": {},
+              "url": "https://stretch-equation-ultimate.ngrok-free.dev/id_challenge",
+              "method": "POST",
+              "path_params_schema": {},
+              "request_body_schema": {
+                "type": "object",
+                "required": [
+                  "full_name",
+                  "date_of_birth"
+                ],
+                "description": "Generate identity verification challenge based on consumer name and date of birth.",
+                "properties": {
+                  "full_name": {
+                    "type": "string",
+                    "description": "Consumer's full name as stated by them",
+                    "is_system_provided": false,
+                    "dynamic_variable": "",
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "is_omitted": false
+                  },
+                  "date_of_birth": {
+                    "type": "string",
+                    "description": "Consumer's date of birth in YYYY-MM-DD format",
+                    "is_system_provided": false,
+                    "dynamic_variable": "",
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "is_omitted": false
+                  }
+                }
+              },
+              "content_type": "application/json",
+              "auth_resolved_params": []
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "id_approve",
+            "id": "tool_9701kx6t74xhfjrvzwgm1c3qx94p",
+            "description": "Verify the consumer's answer to the identity challenge question. Pass the challenge_id from id_challenge and the consumer's answer. Returns verified status and consumer_id if successful.",
+            "response_timeout_secs": 20,
+            "disable_interruptions": false,
+            "interruption_mode": "allow",
+            "force_pre_tool_speech": false,
+            "pre_tool_speech": "auto",
+            "assignments": [],
+            "tool_call_sound_behavior": "auto",
+            "tool_error_handling_mode": "auto",
+            "dynamic_variables": {
+              "dynamic_variable_placeholders": {}
+            },
+            "execution_mode": "immediate",
+            "api_schema": {
+              "request_headers": {},
+              "url": "https://stretch-equation-ultimate.ngrok-free.dev/id_approve",
+              "method": "POST",
+              "path_params_schema": {},
+              "request_body_schema": {
+                "type": "object",
+                "required": [
+                  "challenge_id",
+                  "answer"
+                ],
+                "description": "Verify identity challenge answer and return consumer_id if successful.",
+                "properties": {
+                  "challenge_id": {
+                    "type": "string",
+                    "description": "Challenge ID received from id_challenge tool response",
+                    "is_system_provided": false,
+                    "dynamic_variable": "",
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "is_omitted": false
+                  },
+                  "answer": {
+                    "type": "string",
+                    "description": "Consumer's answer to the security question (extract exact digits or text they provided)",
+                    "is_system_provided": false,
+                    "dynamic_variable": "",
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "is_omitted": false
+                  }
+                }
+              },
+              "content_type": "application/json",
+              "auth_resolved_params": []
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "get_debt_details",
+            "id": "tool_1201kx6tbsycfpbthxp0tjx7179q",
+            "description": "Retrieve complete debt account details for a verified consumer. CRITICAL: ONLY call this AFTER successful identity verification (verified=true from id_approve). Never call before verification or the request will fail.",
+            "response_timeout_secs": 20,
+            "disable_interruptions": false,
+            "interruption_mode": "allow",
+            "force_pre_tool_speech": false,
+            "pre_tool_speech": "auto",
+            "assignments": [],
+            "tool_call_sound_behavior": "auto",
+            "tool_error_handling_mode": "auto",
+            "dynamic_variables": {
+              "dynamic_variable_placeholders": {
+                "account_balance": 0
+              }
+            },
+            "execution_mode": "immediate",
+            "api_schema": {
+              "request_headers": {},
+              "url": "https://stretch-equation-ultimate.ngrok-free.dev/get_debt_details",
+              "method": "POST",
+              "path_params_schema": {},
+              "request_body_schema": {
+                "type": "object",
+                "required": [
+                  "consumer_id"
+                ],
+                "description": "Retrieve debt details using consumer_id from successful id_approve call.",
+                "properties": {
+                  "consumer_id": {
+                    "type": "string",
+                    "description": "Consumer ID received from successful id_approve tool (when verified=true)",
                     "is_system_provided": false,
                     "dynamic_variable": "",
                     "allowed_values_dynamic_variable": "",
@@ -429,41 +583,41 @@
     "guardrails": {
       "version": "1",
       "focus": {
-        "is_enabled": false
+        "is_enabled": true
       },
       "prompt_injection": {
-        "is_enabled": false
+        "is_enabled": true
       },
       "content": {
         "execution_mode": "streaming",
         "config": {
           "sexual": {
-            "is_enabled": false,
-            "threshold": "medium"
+            "is_enabled": true,
+            "threshold": "low"
           },
           "violence": {
-            "is_enabled": false,
-            "threshold": "medium"
+            "is_enabled": true,
+            "threshold": "low"
           },
           "harassment": {
-            "is_enabled": false,
+            "is_enabled": true,
             "threshold": "medium"
           },
           "self_harm": {
-            "is_enabled": false,
-            "threshold": "medium"
+            "is_enabled": true,
+            "threshold": "low"
           },
           "profanity": {
-            "is_enabled": false,
-            "threshold": "medium"
+            "is_enabled": true,
+            "threshold": "high"
           },
           "religion_or_politics": {
-            "is_enabled": false,
+            "is_enabled": true,
             "threshold": "medium"
           },
           "medical_and_legal_information": {
-            "is_enabled": false,
-            "threshold": "medium"
+            "is_enabled": true,
+            "threshold": "high"
           }
         },
         "trigger_action": {
@@ -728,7 +882,7 @@
           "e11"
         ],
         "conversation_config": {},
-        "additional_prompt": "State the balance owed. Ask what the consumer can pay today. Anchor high: mention full payment as the first, preferred option before any discount. Capture their answer as consumer_offer \u2014 do not calculate anything yourself.",
+        "additional_prompt": "State the balance owed. Ask what the consumer can pay today. Anchor high: mention full payment as the first, preferred option before any discount. Capture their answer as consumer_offer — do not calculate anything yourself.",
         "additional_knowledge_base": [],
         "additional_tool_ids": [],
         "label": "Capture Offer",
@@ -781,7 +935,7 @@
           "e12"
         ],
         "conversation_config": {},
-        "additional_prompt": "State the counter-offer returned by the tool as your number, not one you invented. If they push back, either hold firm (restate the value of settling now, calmly, don't repeat the same line twice) or offer a creative trade (e.g. biweekly instead of monthly, or a different due date) for a higher amount, before ever discounting further. If they go quiet after you state the number, wait \u2014 do not fill silence by lowering it yourself.",
+        "additional_prompt": "State the counter-offer returned by the tool as your number, not one you invented. If they push back, either hold firm (restate the value of settling now, calmly, don't repeat the same line twice) or offer a creative trade (e.g. biweekly instead of monthly, or a different due date) for a higher amount, before ever discounting further. If they go quiet after you state the number, wait — do not fill silence by lowering it yourself.",
         "additional_knowledge_base": [],
         "additional_tool_ids": [],
         "label": "Present Counter-Offer",

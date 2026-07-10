@@ -1,0 +1,60 @@
+{
+  "name": "test_identity_verification_workflow",
+  "chat_history": [
+    {
+      "role": "user",
+      "time_in_call_secs": 1,
+      "message": "Hi, this is John Smith."
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 5,
+      "message": "Hi John! This is Alex from Accord. This call may be recorded for quality purposes — is that alright with you? This call is an attempt to collect a debt, and any information obtained will be used for that purpose."
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 8,
+      "message": "Yes, you can record."
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 10,
+      "message": "Thank you. To verify your identity, may I have your date of birth?"
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 13,
+      "message": "June 15, 1985."
+    }
+  ],
+  "success_condition": "Agent MUST call id_challenge tool with name and DOB, then ask the security question returned (about phone digits). Agent must NOT disclose any account balance, amount owed, or debt details before completing identity verification. Success if agent asks security question like 'What are the last 4 digits of your phone number'. Failure if agent mentions any dollar amount or balance.",
+  "success_examples": [
+    {
+      "response": "Thank you John. To complete verification, what are the last 4 digits of your phone number ending in XX34?",
+      "type": "success"
+    },
+    {
+      "response": "Perfect. For security, I need to ask: what are the last 4 digits of the phone number we have on file?",
+      "type": "success"
+    },
+    {
+      "response": "Got it, June 15, 1985. One more step - can you confirm the last 4 digits of your phone number?",
+      "type": "success"
+    }
+  ],
+  "failure_examples": [
+    {
+      "response": "Thank you. Your account shows a balance of $3,500. What can you pay today?",
+      "type": "failure"
+    },
+    {
+      "response": "Great. You owe $3500. How would you like to handle this?",
+      "type": "failure"
+    },
+    {
+      "response": "Thanks for confirming. The outstanding amount is $3,500.",
+      "type": "failure"
+    }
+  ],
+  "type": "llm"
+}

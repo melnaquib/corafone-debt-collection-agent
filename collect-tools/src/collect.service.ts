@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { NegotiateCalcDto, NegotiateCalcResponseDto } from './dto/negotiate-calc.dto';
 import { SendOutcomeDto, SendOutcomeResponseDto } from './dto/send-outcome.dto';
+import { IdChallengeDto, IdChallengeResponseDto, IdApproveDto, IdApproveResponseDto, GetDebtDetailsDto, GetDebtDetailsResponseDto } from './dto/identity.dto';
 
 @Injectable()
 export class CollectService {
@@ -86,6 +87,184 @@ export class CollectService {
       status: 'success',
       message: 'Outcome recorded successfully',
       outcome_id: `outcome_${Date.now()}`,
+    };
+  }
+
+  // In-memory store for challenges (in production, use Redis or database)
+  private challenges = new Map<string, { full_name: string; date_of_birth: string; correct_answer: string; created_at: number }>();
+
+  // Mock consumer database
+  private mockConsumerDB = new Map<string, any>([
+    ['John Smith_1985-06-15', {
+      consumer_id: 'cust_001',
+      phone_last4: '5234',
+      account_balance: 3500,
+      original_amount: 4000,
+      delinquent_date: '2024-08-15',
+      days_past_due: 147,
+      account_number: 'XXXX-XXXX-1234',
+      debt_type: 'credit_card',
+      payment_attempts: 2,
+      last_payment_date: '2024-09-01',
+      last_payment_amount: 200,
+    }],
+    ['Anna Berg_1992-03-20', {
+      consumer_id: 'cust_002',
+      phone_last4: '8901',
+      account_balance: 4000,
+      original_amount: 4000,
+      delinquent_date: '2024-06-10',
+      days_past_due: 213,
+      account_number: 'XXXX-XXXX-5678',
+      debt_type: 'personal_loan',
+      payment_attempts: 0,
+    }],
+    ['Carlos Martinez_1985-06-15', {
+      consumer_id: 'cust_003',
+      phone_last4: '3456',
+      account_balance: 3000,
+      original_amount: 3200,
+      delinquent_date: '2024-07-20',
+      days_past_due: 173,
+      account_number: 'XXXX-XXXX-9012',
+      debt_type: 'credit_card',
+      payment_attempts: 1,
+      last_payment_date: '2024-10-15',
+      last_payment_amount: 200,
+    }],
+  ]);
+
+  /**
+   * Generate identity challenge question
+   * Mock implementation - in production, query customer database for verification data
+   */
+  generateChallenge(dto: IdChallengeDto): IdChallengeResponseDto {
+    const key = `${dto.full_name}_${dto.date_of_birth}`;
+    const consumer = this.mockConsumerDB.get(key);
+
+    if (!consumer) {
+      // Consumer not found - still generate a challenge to avoid enumeration
+      const challenge_id = `chal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      this.challenges.set(challenge_id, {
+        full_name: dto.full_name,
+        date_of_birth: dto.date_of_birth,
+        correct_answer: 'NOTFOUND',
+        created_at: Date.now(),
+      });
+
+      console.log(`[id_challenge] Consumer not found: ${key}`);
+
+      return {
+        challenge_id,
+        question: 'What are the last 4 digits of the phone number on file?',
+        challenge_type: 'phone_last4',
+      };
+    }
+
+    // Generate challenge with actual data
+    const challenge_id = `chal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const masked_phone = `XX${consumer.phone_last4.substring(0, 2)}`;
+
+    this.challenges.set(challenge_id, {
+      full_name: dto.full_name,
+      date_of_birth: dto.date_of_birth,
+      correct_answer: consumer.phone_last4,
+      created_at: Date.now(),
+    });
+
+    console.log(`[id_challenge] Challenge created for ${key}: ${challenge_id}`);
+
+    return {
+      challenge_id,
+      question: `What are the last 4 digits of your phone number ending in ${masked_phone}?`,
+      challenge_type: 'phone_last4',
+    };
+  }
+
+  /**
+   * Verify identity challenge answer
+   * Mock implementation - in production, verify against secure customer data
+   */
+  approveIdentity(dto: IdApproveDto): IdApproveResponseDto {
+    const challenge = this.challenges.get(dto.challenge_id);
+
+    if (!challenge) {
+      console.log(`[id_approve] Invalid or expired challenge: ${dto.challenge_id}`);
+      return {
+        verified: false,
+        failure_reason: 'Invalid or expired challenge ID',
+      };
+    }
+
+    // Check if challenge is expired (5 minutes)
+    const age = Date.now() - challenge.created_at;
+    if (age > 5 * 60 * 1000) {
+      this.challenges.delete(dto.challenge_id);
+      console.log(`[id_approve] Expired challenge: ${dto.challenge_id}`);
+      return {
+        verified: false,
+        failure_reason: 'Challenge expired',
+      };
+    }
+
+    // Check answer
+    if (dto.answer !== challenge.correct_answer) {
+      console.log(`[id_approve] Incorrect answer for ${dto.challenge_id}`);
+      return {
+        verified: false,
+        failure_reason: 'Incorrect answer',
+      };
+    }
+
+    // Success - get consumer_id
+    const key = `${challenge.full_name}_${challenge.date_of_birth}`;
+    const consumer = this.mockConsumerDB.get(key);
+
+    // Clean up challenge
+    this.challenges.delete(dto.challenge_id);
+
+    if (!consumer) {
+      console.log(`[id_approve] Consumer not in DB: ${key}`);
+      return {
+        verified: false,
+        failure_reason: 'Consumer not found',
+      };
+    }
+
+    console.log(`[id_approve] Identity verified: ${consumer.consumer_id}`);
+
+    return {
+      verified: true,
+      consumer_id: consumer.consumer_id,
+    };
+  }
+
+  /**
+   * Retrieve debt details for verified consumer
+   * Mock implementation - in production, query CRM/billing system
+   */
+  getDebtDetails(dto: GetDebtDetailsDto): GetDebtDetailsResponseDto {
+    // Find consumer by ID
+    const consumer = Array.from(this.mockConsumerDB.values()).find(
+      (c) => c.consumer_id === dto.consumer_id,
+    );
+
+    if (!consumer) {
+      throw new Error('Consumer not found or not authorized');
+    }
+
+    console.log(`[get_debt_details] Retrieved details for ${dto.consumer_id}`);
+
+    return {
+      account_balance: consumer.account_balance,
+      original_amount: consumer.original_amount,
+      delinquent_date: consumer.delinquent_date,
+      days_past_due: consumer.days_past_due,
+      account_number: consumer.account_number,
+      debt_type: consumer.debt_type,
+      payment_attempts: consumer.payment_attempts,
+      last_payment_date: consumer.last_payment_date,
+      last_payment_amount: consumer.last_payment_amount,
     };
   }
 }

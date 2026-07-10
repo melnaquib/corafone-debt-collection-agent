@@ -1,0 +1,130 @@
+=======================================================================
+VIDEO RECORDING SCRIPT - Accord Debt Collection AI Agent Demo
+Target Duration: Under 5 minutes
+=======================================================================
+
+[0:00-0:30] INTRODUCTION
+----------------------------
+"Hi, I'm demonstrating Accord's conversational AI debt collection agent,
+built on ElevenLabs with Gemini 2.0 Flash. This agent handles inbound
+debt collection calls with full FDCPA compliance, multilingual support,
+and intelligent negotiation capabilities. Let me show you the key features."
+
+[Screen: Show ElevenLabs dashboard with agent overview]
+
+
+[0:30-1:15] COMPLIANCE FEATURES
+----------------------------
+"First, compliance. The agent has three critical safeguards:
+
+1. Identity Gate - The agent NEVER discloses account balance or debt
+   information until the caller's identity is verified with name and
+   date of birth.
+
+2. Cease and Desist - If a caller requests no further contact in ANY
+   language, the agent immediately stops negotiating, acknowledges the
+   request, and ends the call professionally.
+
+3. Floor Enforcement - The agent enforces a 25% minimum payment requirement
+   and won't accept offers below that threshold."
+
+[Screen: Show agent_configs/inbound_collect.json with guardrails section]
+
+
+[1:15-2:00] MULTILINGUAL CAPABILITY
+----------------------------
+"The agent supports English, Spanish, and Arabic. It automatically detects
+the language and switches seamlessly. Let me demonstrate with a test scenario."
+
+[Screen: Open test_scenarios/scenario_5_successful_negotiation_arabic.md]
+
+"When the caller speaks Arabic, the agent immediately responds in Arabic
+and maintains that language throughout the conversation."
+
+[Optional: Play brief audio clip of language switching if available]
+
+
+[2:00-2:45] INTELLIGENT NEGOTIATION
+----------------------------
+"The agent uses a custom negotiation calculation tool to determine
+counter-offers based on:
+- Account balance
+- Consumer's offer amount
+- Attempt number
+- 25% floor requirement
+
+The tool returns different payment plan types:
+- Full payment for 100% offers
+- Settlement for 80%+ offers
+- Split payments for 50%+ offers
+- Payment plans for offers meeting the floor
+- Rejection for below-floor offers"
+
+[Screen: Show collect-tools/src/collect.service.ts negotiation logic]
+
+
+[2:45-3:30] WORKFLOW ARCHITECTURE
+----------------------------
+"The agent uses a node-based workflow with:
+
+- Entry node for disclosure and consent
+- Identity verification gate
+- Balance disclosure (only after verification)
+- Floor validation nodes
+- Negotiation nodes with tool integration
+- Settlement and agreement paths
+- Cease and desist handling at any point"
+
+[Screen: Visualize workflow structure from agent config]
+
+
+[3:30-4:15] GUARDRAILS & SAFETY
+----------------------------
+"The agent has comprehensive guardrails enabled:
+- Focus: Keeps conversations on-topic
+- Prompt injection protection: Prevents manipulation
+- Content moderation for inappropriate content:
+  * Sexual content (low threshold)
+  * Violence (low threshold)
+  * Harassment (medium threshold)
+  * Profanity (high threshold - allows some)
+
+If triggered, the call ends automatically to protect both parties."
+
+[Screen: Show guardrails configuration in JSON]
+
+
+[4:15-4:50] TESTING & VALIDATION
+----------------------------
+"We have automated test suites covering:
+- Sample greeting and basic flow
+- Identity gate enforcement
+- Cease and desist compliance
+- Floor enforcement (25% minimum)
+- Multilingual negotiation
+
+Plus manual test scenarios for voice testing in English and Arabic."
+
+[Screen: Show test_scenarios/ directory and test results]
+
+
+[4:50-5:00] CLOSING
+----------------------------
+"This demonstrates a production-ready AI agent for debt collection that
+balances compliance, intelligence, and user experience. The system is
+fully configurable, integrates with existing CRM systems via webhooks,
+and scales to handle high call volumes.
+
+Thank you for watching!"
+
+[Screen: Show GitHub repo or project overview]
+
+=======================================================================
+RECORDING TIPS:
+- Speak clearly and at moderate pace
+- Use screen recording software (OBS, Loom, etc.)
+- Have all files/screens prepared beforehand
+- Practice once to stay under 5 minutes
+- Consider background music at low volume
+- Add captions if distributing widely
+=======================================================================

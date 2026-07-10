@@ -32,6 +32,11 @@
         {
             "config": "test_configs/test_swedish_negotiation_full.json",
             "id": "test_1201kx68spc1e1q982a64xv461h8"
+        },
+        {
+            "config": "test_configs/test_identity_verification_flow.json",
+            "id": "test_5501kx6tqymgfr5a9qnx1kqhy8n8",
+            "type": "llm"
         }
     ]
 }
