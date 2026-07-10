@@ -12,8 +12,10 @@ export class CollectService {
     const { account_balance, consumer_offer, attempt_no } = dto;
 
     // 25% floor check
-    const floor = account_balance * 0.25;
+    const floor = Math.round(account_balance * 0.25);
     const meets_floor = consumer_offer >= floor;
+
+    console.log(`[negotiate_calc] balance=${account_balance}, offer=${consumer_offer}, floor=${floor}, meets_floor=${meets_floor}`);
 
     // Mock logic:
     // - If offer >= 100%: accept as full payment
@@ -60,11 +62,13 @@ export class CollectService {
       };
     }
 
-    // Below floor
+    // Below floor - return the floor amount as counter
     return {
       counter_offer: floor,
       plan_type: 'below_floor',
       meets_floor: false,
+      installments: 1,
+      frequency: 'n_a',
     };
   }
 

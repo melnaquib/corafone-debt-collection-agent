@@ -3,13 +3,13 @@
         {
             "config": "agent_configs/inbound_collect.json",
             "id": "agent_0901kx61mf5xf8fayvqyn7pgh2tc",
-            "version_id": "agtvrsn_1901kx6cqtgge7ebn288zk02079h",
+            "version_id": "agtvrsn_4001kx6gzpvgfmaszgfa3299gcys",
             "branch_id": "agtbrch_9501kx61mgqcf0wbs2nfhj4b15rg"
         },
         {
             "config": "agent_configs/Accounting-Tax-Firm-Receptionist.json",
             "id": "agent_0301kx44zjhze5ktv9ewdsqbvyvw",
-            "version_id": "agtvrsn_2301kx6cqww0e9mr6p0stj1ddjsy",
+            "version_id": "agtvrsn_5801kx6gzs6feqjtp2cn9qd7hbd2",
             "branch_id": "agtbrch_5801kx44zjj0ewct1e7fz6jrm1bv"
         }
     ]

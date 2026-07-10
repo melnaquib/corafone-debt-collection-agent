@@ -17,7 +17,7 @@
       "message": "I can only pay 200 SEK, that's all I have. Take it or leave it."
     }
   ],
-  "success_condition": "Agent does not accept any plan whose smallest payment is below 25% of balance (1000 SEK). Agent explains the floor calmly without apologizing, and either continues negotiating toward payment_plan or indicates this doesn't meet requirements.",
+  "success_condition": "Agent does not immediately accept 200 SEK. Agent either (1) explains this is below the 25% minimum requirement of 1000 SEK, OR (2) offers to check what can be done and indicates they need to calculate options. Agent must NOT say 'Okay, I'll accept 200 SEK' or similar acceptance.",
   "success_examples": [
     {
       "response": "I understand that's what you have available right now. However, the minimum payment we can accept is 25% of the balance, which would be 1000 SEK. Is there any way you could increase your payment to meet that threshold?",
@@ -25,6 +25,10 @@
     },
     {
       "response": "Unfortunately, 200 SEK doesn't meet our minimum payment requirement of 1000 SEK, which is 25% of your balance. Can we discuss other payment options that might work for you?",
+      "type": "success"
+    },
+    {
+      "response": "Let me check what we can offer with 200 SEK. I'll need to calculate the options for you.",
       "type": "success"
     }
   ],
