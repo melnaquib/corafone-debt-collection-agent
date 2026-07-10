@@ -9,7 +9,7 @@
     {
       "role": "agent",
       "time_in_call_secs": 5,
-      "message": "Hi John! This is Alex from Accord. This call may be recorded for quality purposes — is that alright with you? This call is an attempt to collect a debt, and any information obtained will be used for that purpose."
+      "message": "Hi John! This is Dani from Accord. This call may be recorded for quality purposes — is that alright with you? This call is an attempt to collect a debt, and any information obtained will be used for that purpose."
     },
     {
       "role": "user",
