@@ -86,7 +86,7 @@
       "disable_first_message_interruptions": false,
       "max_conversation_duration_message": "I need to wrap up \u2014 let's lock in the plan we discussed now, or I can have someone call you back.",
       "prompt": {
-        "prompt": "You are Alex, a calm professional debt negotiator for Corafone.\n\nCRITICAL LANGUAGE RULE: If the consumer speaks in Swedish, Norwegian, or any other language, IMMEDIATELY switch to that language and STAY in that language for the ENTIRE conversation. NEVER revert to English unless the consumer explicitly switches back. This applies to ALL responses throughout the call.\n\nCRITICAL COMPLIANCE RULE: If the consumer says 'cease and desist', 'stop calling', 'do not contact me', or any similar request to stop contact, you MUST immediately:\n1. Stop all negotiation discussion\n2. Politely acknowledge their request\n3. Confirm you will comply\n4. State clearly this does NOT erase the debt\n5. End the call WITHOUT any further payment discussion\n\nCRITICAL PAYMENT RULE: NEVER accept, confirm, or agree to ANY payment amount without first calling the negotiate_calc tool. If the tool returns meets_floor=false, you MUST explain the 25% minimum requirement.\n\nGlobal rules that always apply:\n- Never say a payment erases or resets the debt\n- Never imply legal action beyond what's true\n- One idea per turn\n- Always call negotiate_calc before presenting counter-offers",
+        "prompt": "You are Alex, a calm professional debt negotiator for Corafone.\n\nLanguage Rule: If the consumer speaks in Swedish, Norwegian, or any other language, IMMEDIATELY switch to that language and STAY in that language for the ENTIRE conversation. NEVER revert to English unless the consumer explicitly switches back.\n\nCease-and-Desist Compliance: If the consumer says 'cease and desist', 'stop calling', 'do not contact me', or any similar request to stop contact, immediately:\n1. Stop all negotiation discussion\n2. Politely acknowledge their request\n3. Confirm you will comply\n4. State clearly this does NOT erase the debt\n5. End the call WITHOUT any further payment discussion\n\nGlobal rules that always apply:\n- Never say a payment erases or resets the debt\n- Never imply legal action beyond what's true\n- One idea per turn\n- Always use negotiate_calc tool before presenting counter-offers",
         "llm": "gemini-2.0-flash",
         "opener": null,
         "enable_reasoning_summary": false,
@@ -550,12 +550,58 @@
           "type": "unconditional"
         }
       },
+      "e3a": {
+        "source": "calc_negotiation",
+        "target": "validate_floor",
+        "forward_condition": {
+          "type": "unconditional"
+        }
+      },
+      "e3b": {
+        "source": "validate_floor",
+        "target": "present_counter",
+        "forward_condition": {
+          "type": "llm",
+          "condition": "meets_floor is true"
+        }
+      },
+      "e3c": {
+        "source": "validate_floor",
+        "target": "no_agreement",
+        "forward_condition": {
+          "type": "llm",
+          "condition": "meets_floor is false and consumer cannot increase offer"
+        }
+      },
       "e4": {
         "source": "present_counter",
         "target": "calc_negotiation_2",
         "forward_condition": {
           "type": "llm",
           "condition": "consumer counters with a different amount"
+        }
+      },
+      "e4a": {
+        "source": "calc_negotiation_2",
+        "target": "validate_floor_2",
+        "forward_condition": {
+          "type": "unconditional"
+        }
+      },
+      "e4b": {
+        "source": "validate_floor_2",
+        "target": "present_counter",
+        "forward_condition": {
+          "type": "llm",
+          "condition": "meets_floor is true"
+        }
+      },
+      "e4c": {
+        "source": "validate_floor_2",
+        "target": "no_agreement",
+        "forward_condition": {
+          "type": "llm",
+          "condition": "meets_floor is false"
         }
       },
       "e5": {
@@ -665,7 +711,7 @@
           "e2"
         ],
         "conversation_config": {},
-        "additional_prompt": "Confirm the consumer consents to the recorded call. Then verify identity: ask for full name and date of birth. Do not disclose any balance or account detail until identity is confirmed. If they refuse recording, offer a non-recorded callback and end.\n\nCRITICAL: If consumer says 'cease and desist', 'stop calling', or requests no contact, IMMEDIATELY stop, acknowledge politely, confirm compliance, state debt is not erased, and route to NO_AGREEMENT without further discussion.",
+        "additional_prompt": "Confirm the consumer consents to the recorded call. Then verify identity: ask for full name and date of birth. Do not disclose any balance or account detail until identity is confirmed. If they refuse recording, offer a non-recorded callback and end.",
         "additional_knowledge_base": [],
         "additional_tool_ids": [],
         "label": "Disclosure + Identity",
@@ -682,7 +728,7 @@
           "e11"
         ],
         "conversation_config": {},
-        "additional_prompt": "State the balance owed. Ask what the consumer can pay today. Anchor high: mention full payment as the first, preferred option before any discount. Capture their answer as consumer_offer \u2014 do not calculate anything yourself.\n\nCRITICAL: NEVER accept any amount without calling negotiate_calc first. If consumer says 'cease and desist' or requests no contact, stop immediately and route to NO_AGREEMENT.",
+        "additional_prompt": "State the balance owed. Ask what the consumer can pay today. Anchor high: mention full payment as the first, preferred option before any discount. Capture their answer as consumer_offer \u2014 do not calculate anything yourself.",
         "additional_knowledge_base": [],
         "additional_tool_ids": [],
         "label": "Capture Offer",
@@ -694,12 +740,31 @@
           "x": 0,
           "y": 900
         },
-        "edge_order": [],
+        "edge_order": [
+          "e3a"
+        ],
         "label": "Calculate Counter-Offer (Round 1)",
-        "additional_prompt": "Call the negotiate_calc tool to calculate the counter-offer. Wait for the result. Do NOT invent or suggest any payment amounts yourself.\n\nCRITICAL: You MUST call this tool before presenting ANY counter-offer. Never skip this step.",
+        "additional_prompt": "Call the negotiate_calc tool to calculate the counter-offer. Wait for the result. Do NOT invent or suggest any payment amounts yourself.",
         "additional_tool_ids": [
           "tool_4401kx63h1wefdpbkdw4c8hx8ms8"
         ],
+        "additional_knowledge_base": [],
+        "entry_behavior": "auto",
+        "conversation_config": {}
+      },
+      "validate_floor": {
+        "type": "override_agent",
+        "position": {
+          "x": 0,
+          "y": 1050
+        },
+        "edge_order": [
+          "e3b",
+          "e3c"
+        ],
+        "label": "Validate Floor",
+        "additional_prompt": "Check the negotiate_calc result. If meets_floor is false, explain calmly that the consumer's offer is below the required minimum of 25% of the balance. Ask if they can increase their offer to meet that threshold. If they say no or cannot, route to NO_AGREEMENT. If meets_floor is true, proceed to present the counter-offer.",
+        "additional_tool_ids": [],
         "additional_knowledge_base": [],
         "entry_behavior": "auto",
         "conversation_config": {}
@@ -716,7 +781,7 @@
           "e12"
         ],
         "conversation_config": {},
-        "additional_prompt": "State the counter-offer returned by the tool as your number, not one you invented. If they push back, either hold firm (restate the value of settling now, calmly, don't repeat the same line twice) or offer a creative trade (e.g. biweekly instead of monthly, or a different due date) for a higher amount, before ever discounting further. If they go quiet after you state the number, wait \u2014 do not fill silence by lowering it yourself.\n\nCRITICAL: Only present amounts returned by negotiate_calc. If meets_floor=false, explain the 25% minimum calmly. If consumer says 'cease and desist', stop and route to NO_AGREEMENT.",
+        "additional_prompt": "State the counter-offer returned by the tool as your number, not one you invented. If they push back, either hold firm (restate the value of settling now, calmly, don't repeat the same line twice) or offer a creative trade (e.g. biweekly instead of monthly, or a different due date) for a higher amount, before ever discounting further. If they go quiet after you state the number, wait \u2014 do not fill silence by lowering it yourself.",
         "additional_knowledge_base": [],
         "additional_tool_ids": [],
         "label": "Present Counter-Offer",
@@ -728,12 +793,31 @@
           "x": 0,
           "y": 1500
         },
-        "edge_order": [],
+        "edge_order": [
+          "e4a"
+        ],
         "label": "Calculate Counter-Offer (Round 2)",
-        "additional_prompt": "Call the negotiate_calc tool again to calculate a second counter-offer. Wait for the result.\n\nCRITICAL: Always call this tool for the second negotiation round. Never present amounts without tool validation.",
+        "additional_prompt": "Call the negotiate_calc tool again to calculate a second counter-offer. Wait for the result.",
         "additional_tool_ids": [
           "tool_4401kx63h1wefdpbkdw4c8hx8ms8"
         ],
+        "additional_knowledge_base": [],
+        "entry_behavior": "auto",
+        "conversation_config": {}
+      },
+      "validate_floor_2": {
+        "type": "override_agent",
+        "position": {
+          "x": 0,
+          "y": 1650
+        },
+        "edge_order": [
+          "e4b",
+          "e4c"
+        ],
+        "label": "Validate Floor (Round 2)",
+        "additional_prompt": "Check the negotiate_calc result from the second negotiation round. If meets_floor is false, explain that we've reached the minimum threshold and cannot go lower. Route to NO_AGREEMENT if they cannot meet the floor. If meets_floor is true, proceed to present the final counter-offer.",
+        "additional_tool_ids": [],
         "additional_knowledge_base": [],
         "entry_behavior": "auto",
         "conversation_config": {}
