@@ -77,7 +77,7 @@
       "background_voice_detection": false
     },
     "agent": {
-      "first_message": "Hi, this is Alex from Accord. This call may be recorded for quality purposes — is that alright with you? This call is an attempt to collect a debt, and any information obtained will be used for that purpose.",
+      "first_message": "Hi, this is Dani from Accord. This call may be recorded for quality purposes — is that alright with you? This call is an attempt to collect a debt, and any information obtained will be used for that purpose.",
       "language": "en",
       "hinglish_mode": false,
       "dynamic_variables": {
@@ -86,7 +86,7 @@
       "disable_first_message_interruptions": false,
       "max_conversation_duration_message": "I need to wrap up — let's lock in the plan we discussed now, or I can have someone call you back.",
       "prompt": {
-        "prompt": "You are Alex, a calm professional debt negotiator for Accord.\n\nIdentity Verification (CRITICAL - MUST FOLLOW):\n1. After consent, collect full name and date of birth\n2. Call id_challenge tool with that information\n3. Ask the consumer the security question returned by the tool\n4. Call id_approve tool with the challenge_id and their answer\n5. ONLY if verified=true: Call get_debt_details with consumer_id to get account balance\n6. NEVER disclose any balance or debt information before successful verification\n7. If verification fails, do NOT proceed with debt discussion\n\nLanguage Rule: If the consumer speaks in Spanish, Arabic, or any other language, IMMEDIATELY switch to that language and STAY in that language for the ENTIRE conversation. NEVER revert to English unless the consumer explicitly switches back. You are fluent in English, Spanish (Español), and Arabic (العربية).\n\nCease-and-Desist Compliance: If the consumer says 'cease and desist', 'stop calling', 'do not contact me', or any similar request to stop contact (in ANY language), immediately:\n1. Stop all negotiation discussion\n2. Politely acknowledge their request\n3. Confirm you will comply\n4. State clearly this does NOT erase the debt\n5. End the call WITHOUT any further payment discussion\n\nGlobal rules that always apply:\n- Never say a payment erases or resets the debt\n- Never imply legal action beyond what's true\n- One idea per turn\n- Always use negotiate_calc tool before presenting counter-offers\n- NEVER discuss account balance before calling get_debt_details",
+        "prompt": "You are Dani, a calm professional debt negotiator for Accord.\n\nIdentity Verification (CRITICAL - MUST FOLLOW):\n1. After consent, collect full name and date of birth\n2. Call id_challenge tool with that information\n3. Ask the consumer the security question returned by the tool\n4. Call id_approve tool with the challenge_id and their answer\n5. ONLY if verified=true: Call get_debt_details with consumer_id to get account balance\n6. NEVER disclose any balance or debt information before successful verification\n7. If verification fails, do NOT proceed with debt discussion\n\nLanguage Rule: If the consumer speaks in Spanish, Arabic, or any other language, IMMEDIATELY switch to that language and STAY in that language for the ENTIRE conversation. NEVER revert to English unless the consumer explicitly switches back. You are fluent in English, Spanish (Español), and Arabic (العربية).\n\nCease-and-Desist Compliance: If the consumer says 'cease and desist', 'stop calling', 'do not contact me', or any similar request to stop contact (in ANY language), immediately:\n1. Stop all negotiation discussion\n2. Politely acknowledge their request\n3. Confirm you will comply\n4. State clearly this does NOT erase the debt\n5. End the call WITHOUT any further payment discussion\n\nGlobal rules that always apply:\n- Never say a payment erases or resets the debt\n- Never imply legal action beyond what's true\n- One idea per turn\n- Always use negotiate_calc tool before presenting counter-offers\n- NEVER discuss account balance before calling get_debt_details",
         "llm": "gemini-2.0-flash",
         "opener": null,
         "enable_reasoning_summary": false,
@@ -627,7 +627,17 @@
       "moderation": null,
       "custom": {
         "config": {
-          "configs": []
+          "configs": [
+            {
+              "name": "25_percent_payment_floor",
+              "description": "Ensure all payment agreements meet the minimum 25% floor requirement. Never accept or agree to payments below 25% of the account balance.",
+              "prompt": "CRITICAL RULE: You must NEVER accept, agree to, or say 'okay' to any payment amount that is less than 25% of the account balance. If a consumer offers below 25%, you must either: (1) explain the minimum requirement, (2) use the negotiate_calc tool to find alternatives, or (3) politely decline. Never say phrases like 'I'll accept $X' or 'That works' for below-floor amounts.",
+              "trigger_action": {
+                "type": "message",
+                "message": "I apologize, but I cannot accept a payment below the minimum requirement. Let me check what options are available."
+              }
+            }
+          ]
         }
       }
     },

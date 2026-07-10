@@ -7,7 +7,7 @@
 ## Your Script
 
 ### Opening
-**Agent:** "Hello, this is Alex from Accord..."
+**Agent:** "Hello, this is Dani from Accord..."
 
 **You say:** "Hi, yes this is Sarah."
 

@@ -7,7 +7,7 @@
 ## Your Script / النص الخاص بك
 
 ### Opening
-**Agent:** "Hello, this is Alex from Accord..."
+**Agent:** "Hello, this is Dani from Accord..."
 
 **You say:** "مرحباً، أنا فاطمة حسن."
 *(Hello, I'm Fatima Hassan.)*
