@@ -1,0 +1,67 @@
+{
+    "type": "webhook",
+    "name": "negotiate_calc",
+    "description": "Calculates the next counter-offer given the consumer's proposed payment and account balance. Must be called before stating any counter-offer to the consumer. Never invent numbers — always use this tool's response.",
+    "response_timeout_secs": 20,
+    "disable_interruptions": false,
+    "interruption_mode": "allow",
+    "force_pre_tool_speech": false,
+    "pre_tool_speech": "auto",
+    "assignments": [],
+    "tool_call_sound_behavior": "auto",
+    "tool_error_handling_mode": "auto",
+    "dynamic_variables": {
+        "dynamic_variable_placeholders": {
+            "account_balance": 0
+        }
+    },
+    "execution_mode": "immediate",
+    "api_schema": {
+        "request_headers": {
+            "ngrok-skip-browser-warning": "1"
+        },
+        "url": "https://stretch-equation-ultimate.ngrok-free.dev/negotiate_calc",
+        "method": "POST",
+        "path_params_schema": {},
+        "request_body_schema": {
+            "type": "object",
+            "required": [
+                "account_balance",
+                "consumer_offer",
+                "attempt_no"
+            ],
+            "description": "Top-level body description (separate from each property's own description) — one line summarizing the whole payload's purpose:\n\n**`negotiate_calc`**\n> \"Request to calculate a compliant counter-offer based on the consumer's payment offer, the account balance, and how many negotiation rounds have happened so far.\"\n\n**`send_outcome`**\n> \"Final call result to log and route downstream — exactly one outcome type plus the agreed payment details, sent once at call end.\"\n\nIf the form only has one description slot per param (not a separate top-level one) and you're filling it for a specific param right now, tell me which param and which tool and I'll give the exact line for that slot.",
+            "properties": {
+                "account_balance": {
+                    "type": "number",
+                    "description": "",
+                    "is_system_provided": false,
+                    "dynamic_variable": "account_balance",
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "is_omitted": false
+                },
+                "consumer_offer": {
+                    "type": "number",
+                    "description": "Extract the exact payment amount in the account's currency that the consumer just offered to pay. Return the number only, no currency symbol.",
+                    "is_system_provided": false,
+                    "dynamic_variable": "",
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "is_omitted": false
+                },
+                "attempt_no": {
+                    "type": "number",
+                    "description": "Track which negotiation round this is. Start at 1 on the first offer/counter-offer exchange. Increment to 2 only if the consumer counters after hearing the first tool-calculated offer. Never exceed 2",
+                    "is_system_provided": false,
+                    "dynamic_variable": "",
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "is_omitted": false
+                }
+            }
+        },
+        "content_type": "application/json",
+        "auth_resolved_params": []
+    }
+}

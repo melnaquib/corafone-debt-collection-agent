@@ -1,0 +1,55 @@
+{
+    "type": "webhook",
+    "name": "id_challenge",
+    "description": "Generate security question after collecting name/DOB",
+    "response_timeout_secs": 20,
+    "disable_interruptions": false,
+    "interruption_mode": "allow",
+    "force_pre_tool_speech": false,
+    "pre_tool_speech": "auto",
+    "assignments": [],
+    "tool_call_sound_behavior": "auto",
+    "tool_error_handling_mode": "auto",
+    "dynamic_variables": {
+        "dynamic_variable_placeholders": {}
+    },
+    "execution_mode": "immediate",
+    "api_schema": {
+        "request_headers": {
+            "ngrok-skip-browser-warning": "1"
+        },
+        "url": "https://stretch-equation-ultimate.ngrok-free.dev/id_challenge",
+        "method": "POST",
+        "path_params_schema": {},
+        "request_body_schema": {
+            "type": "object",
+            "required": [
+                "full_name",
+                "date_of_birth"
+            ],
+            "description": "Returns challenge_id, question, and challenge_type",
+            "properties": {
+                "full_name": {
+                    "type": "string",
+                    "description": "Consumer's full name",
+                    "is_system_provided": false,
+                    "dynamic_variable": "",
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "is_omitted": false
+                },
+                "date_of_birth": {
+                    "type": "string",
+                    "description": "YYYY-MM-DD format",
+                    "is_system_provided": false,
+                    "dynamic_variable": "",
+                    "allowed_values_dynamic_variable": "",
+                    "constant_value": "",
+                    "is_omitted": false
+                }
+            }
+        },
+        "content_type": "application/json",
+        "auth_resolved_params": []
+    }
+}

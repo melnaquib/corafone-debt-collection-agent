@@ -1,3 +1,29 @@
 {
-  "tools": []
+    "tools": [
+        {
+            "type": "webhook",
+            "config": "tool_configs/get_debt_details.json",
+            "id": "tool_1201kx6tbsycfpbthxp0tjx7179q"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/id_approve.json",
+            "id": "tool_9701kx6t74xhfjrvzwgm1c3qx94p"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/id_challenge.json",
+            "id": "tool_5001kx6t1zgvfskr1b3bxavstrcw"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/send_outcome-1.json",
+            "id": "tool_1301kx64yft7fcca1bms595t8xte"
+        },
+        {
+            "type": "webhook",
+            "config": "tool_configs/negotiate_calc-1.json",
+            "id": "tool_4401kx63h1wefdpbkdw4c8hx8ms8"
+        }
+    ]
 }
