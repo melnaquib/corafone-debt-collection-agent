@@ -77,7 +77,7 @@
       "background_voice_detection": false
     },
     "agent": {
-      "first_message": "Hi, this is Dani from Accord. This call may be recorded for quality purposes — is that alright with you? This call is an attempt to collect a debt, and any information obtained will be used for that purpose.",
+      "first_message": "Hi, this is Dani from Accord. May I record this call for quality purposes?",
       "language": "en",
       "hinglish_mode": false,
       "dynamic_variables": {
