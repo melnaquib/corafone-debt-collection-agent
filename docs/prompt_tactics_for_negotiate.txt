@@ -1,0 +1,56 @@
+10 Negotiation Claude Prompts I run before every important conversation:
+
+Save this. Most founders lose deals in the prep, not the room.
+
+1/ Prep Brief
+"You're a negotiation coach with 20+ years of experience. I'm about to negotiate [deal/situation] with [other party]. Build me a one-page prep brief: my goals, their likely goals, leverage on both sides, and the 3 outcomes I'd accept."
+
+2/ BATNA Analysis
+"Here's the deal on the table [paste]. Walk me through my BATNA: my best alternative if this falls through. Then walk me through theirs. Tell me who actually has more leverage and why."
+
+3/ Opening Offer
+"Here's the context for a negotiation I'm walking into [paste]. Help me craft my opening offer. Include the number, the framing, and how to deliver it so it anchors without killing the deal."
+
+4/ Objection Scripts
+"Here are the 5 pushbacks I'm expecting in this negotiation [paste]. Write me 2 responses to each. One that holds firm, one that opens a creative trade. Tell me which to use when."
+
+5/ Trade List
+"Here's what I want and what they want [paste]. Build me a list of 10 trades I could offer that cost me little but feel valuable to them. Rank by how much they'd move the deal forward."
+
+6/ Silence Playbook
+"Walk me through how to handle silence in a negotiation. What to do when they go quiet after my number. What to do when I should be quiet. Give me 5 scenarios and the right move for each."
+
+7/ Email Draft
+"I need to send a negotiation email [paste context]. Write me 2 versions. One that holds firm without burning the relationship. One that opens a creative path forward. Keep both under 150 words."
+
+8/ Walk-Away Point
+"Here's the deal I'm considering [paste]. Help me define my real walk-away point. Include the financial line, the relationship line, and the deal-killers I shouldn't compromise on no matter how good the rest looks."
+
+9/ Power Read
+"Here's everything I know about the person I'm negotiating with [paste]. Tell me what likely matters most to them: money, time, ego, security, control, legacy. Help me adjust my pitch around what they actually care about."
+
+10/ Post-Negotiation Debrief
+"Here's what was said in a negotiation I just had [paste transcript or notes]. Tell me where I gave up leverage too early, where I should've pushed harder, and 3 things I'd do differently next time."
+
+The prompts are only half of it.
+
+Negotiation isn't a personality. 
+
+It's a process. 
+
+The best negotiators I've watched aren't smooth talkers. 
+
+They're prepared. They know their walk-away point before they sit down. 
+
+They listen more than they pitch. 
+
+And they don't take the first yes that pops up if it's the wrong yes.
+
+Most deals are won in the hour before the call, not during it.
+
+Which prompt are you running first?
+
+♻️ Repost if you know a founder who walks into negotiations winging it.
+
+P.S. Building a 10-business portfolio, fully remote, from Colorado. Six down so far. Full breakdowns at nathanhirsch(dot)com/newsletter.
+
