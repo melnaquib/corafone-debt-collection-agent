@@ -167,3 +167,86 @@ The disclosure_identity node has **4 possible exit paths**:
 - Remove these workflow edges
 - Change the order (check success first, then verification failures, then refusal)
 - Remove minor detection or ID verification failure branches
+
+---
+
+## MCP Tools Available
+
+The agent has access to these MCP server tools via `@rekog/mcp-nest`:
+
+### 1. **id_challenge** (Identity Verification - Step 1)
+- **Purpose**: Generate security question after collecting name and DOB
+- **Input**: `full_name`, `date_of_birth` (YYYY-MM-DD)
+- **Output**: `challenge_id`, `question`, `challenge_type`
+- **When to use**: After consumer consents and provides their name/DOB
+
+### 2. **id_approve** (Identity Verification - Step 2)
+- **Purpose**: Verify consumer's answer to security question
+- **Input**: `challenge_id`, `answer`
+- **Output**: `verified` (true/false), `consumer_id` (if verified), `failure_reason` (if not)
+- **When to use**: After asking the security question and getting consumer's answer
+- **CRITICAL**: Do NOT proceed with debt discussion if verified=false
+
+### 3. **get_debt_details** (Retrieve Account Information)
+- **Purpose**: Get full debt details for verified consumer
+- **Input**: `consumer_id` (from id_approve response)
+- **Output**: Account balance, delinquent date, days past due, account number, etc.
+- **When to use**: ONLY after id_approve returns verified=true
+- **CRITICAL**: NEVER call this before identity is verified
+
+### 4. **negotiate_calc** (Calculate Counter-Offer)
+- **Purpose**: Calculate settlement offer based on consumer's proposed payment
+- **Input**: `account_balance`, `consumer_offer`, `attempt_no` (1 or 2)
+- **Output**: `counter_offer`, `plan_type`, `meets_floor`, discount info
+- **When to use**: After consumer states what they can pay
+- **CRITICAL**: ALWAYS use this tool, never invent payment amounts
+
+### 5. **verify_payment_coverage** (NEW - Bank Account Verification)
+- **Purpose**: Check if consumer has sufficient funds via AWS Enclave
+- **Input**: `consumer_id`, `payment_amount`
+- **Output**: `coverage_status` (yes/no/cannot_confirm), `message`, `verification_id`
+- **When to use**: BEFORE finalizing any payment agreement to reduce payment failure risk
+- **How it works**: Securely calls AWS Enclave to check bank account without exposing sensitive data
+- **Status meanings**:
+  - `yes`: Sufficient funds confirmed - safe to proceed
+  - `no`: Insufficient funds - may need to adjust payment plan
+  - `cannot_confirm`: Verification unavailable - proceed with caution or defer
+- **Example**: After consumer agrees to $3,040 payment, call this to verify they can cover it
+
+### 6. **send_outcome** (Report Final Call Result)
+- **Purpose**: Log the final outcome to CRM/database
+- **Input**: `outcome_type`, `amount`, `plan_type`, `installments`, `consent_confirmed`, `notes`
+- **Output**: Confirmation of logged outcome
+- **When to use**: At the very end of the call, exactly once
+- **CRITICAL**: Call this in the `send_outcome_node` workflow node
+
+---
+
+## Best Practices for verify_payment_coverage
+
+**When to call:**
+- ✅ After consumer verbally agrees to a specific payment amount
+- ✅ Before saying "We're all set" or providing confirmation number
+- ✅ For first payment in installment plans
+- ✅ For full/lump-sum payments
+
+**When NOT to call:**
+- ❌ Before consumer has agreed to an amount
+- ❌ During initial negotiation phase
+- ❌ Multiple times for same payment (wastes time)
+
+**How to use the response:**
+- **If "yes"**: Proceed confidently to close
+- **If "no"**: Suggest alternative payment plan or smaller amount
+  - "I'm showing that amount might not be available right now. Could we do [smaller amount] to start?"
+- **If "cannot_confirm"**: Proceed but note risk
+  - "I'm unable to verify funds right now, but let's lock this in. If there's any issue, we'll follow up."
+
+**Example workflow:**
+```
+Consumer: "Okay, I can do the $3,040"
+Agent: [Call verify_payment_coverage with consumer_id, 3040]
+  → Response: coverage_status="yes"
+Agent: "Perfect! I've confirmed that works. Let me get your confirmation number..."
+```
+

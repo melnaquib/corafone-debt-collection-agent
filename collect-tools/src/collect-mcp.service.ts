@@ -78,4 +78,16 @@ export class CollectMcpService {
   getDebtDetails(params: { consumer_id: string }) {
     return this.collectService.getDebtDetails(params);
   }
+
+  @Tool({
+    name: 'verify_payment_coverage',
+    description: 'Verify if consumer has sufficient funds to cover the proposed payment amount. Call this BEFORE finalizing any payment agreement to reduce payment failure risk. Returns yes (sufficient funds), no (insufficient), or cannot_confirm (unable to verify). This uses secure AWS Enclave to check bank account status without exposing sensitive data.',
+    parameters: z.object({
+      consumer_id: z.string().describe('Consumer ID from id_approve response'),
+      payment_amount: z.number().describe('Payment amount in dollars to verify coverage for'),
+    }),
+  })
+  async verifyPaymentCoverage(params: { consumer_id: string; payment_amount: number }) {
+    return this.collectService.verifyPaymentCoverage(params);
+  }
 }

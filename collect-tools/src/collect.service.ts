@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { NegotiateCalcDto, NegotiateCalcResponseDto } from './dto/negotiate-calc.dto';
 import { SendOutcomeDto, SendOutcomeResponseDto } from './dto/send-outcome.dto';
 import { IdChallengeDto, IdChallengeResponseDto, IdApproveDto, IdApproveResponseDto, GetDebtDetailsDto, GetDebtDetailsResponseDto } from './dto/identity.dto';
+import { VerifyPaymentDto, VerifyPaymentResponseDto } from './dto/verify-payment.dto';
 
 @Injectable()
 export class CollectService {
@@ -301,5 +302,109 @@ export class CollectService {
       last_payment_date: consumer.last_payment_date,
       last_payment_amount: consumer.last_payment_amount,
     };
+  }
+
+  /**
+   * Verify if consumer has sufficient funds to cover payment
+   * Calls AWS Enclave app for secure bank account verification
+   * Mock implementation - replace with actual AWS Enclave integration
+   */
+  async verifyPaymentCoverage(dto: VerifyPaymentDto): Promise<VerifyPaymentResponseDto> {
+    const { consumer_id, payment_amount } = dto;
+
+    console.log(`[verify_payment] Checking coverage for consumer ${consumer_id}, amount: $${payment_amount}`);
+
+    // Mock: Find consumer
+    const consumer = Array.from(this.mockConsumerDB.values()).find(
+      (c) => c.consumer_id === consumer_id,
+    );
+
+    if (!consumer) {
+      console.log(`[verify_payment] Consumer not found: ${consumer_id}`);
+      return {
+        coverage_status: 'cannot_confirm',
+        message: 'Unable to verify - consumer not found',
+        verified_at: new Date().toISOString(),
+        verification_id: `enclave_verify_${Date.now()}`,
+      };
+    }
+
+    try {
+      // TODO: Replace with actual AWS Enclave integration
+      // const enclaveResponse = await this.callAwsEnclave(consumer_id, payment_amount);
+
+      // MOCK AWS Enclave call
+      const mockEnclaveResponse = await this.mockAwsEnclaveVerification(consumer_id, payment_amount);
+
+      const verification_id = `enclave_verify_${Date.now()}`;
+
+      console.log(`[verify_payment] Enclave response: ${mockEnclaveResponse.status}, verification_id: ${verification_id}`);
+
+      return {
+        coverage_status: mockEnclaveResponse.status,
+        message: mockEnclaveResponse.message,
+        verified_at: new Date().toISOString(),
+        verification_id,
+      };
+    } catch (error) {
+      console.error(`[verify_payment] Enclave error:`, error);
+      return {
+        coverage_status: 'cannot_confirm',
+        message: 'Unable to verify payment coverage at this time',
+        verified_at: new Date().toISOString(),
+        verification_id: `enclave_verify_${Date.now()}`,
+      };
+    }
+  }
+
+  /**
+   * Mock AWS Enclave verification
+   * In production, replace with actual AWS Nitro Enclaves API call
+   *
+   * AWS Enclave integration would:
+   * 1. Securely connect to encrypted enclave environment
+   * 2. Pass consumer_id and payment_amount via secure channel
+   * 3. Enclave queries bank account data (stored encrypted)
+   * 4. Returns yes/no/cannot_confirm without exposing account details
+   *
+   * Example production code:
+   * ```
+   * const response = await fetch('https://enclave.internal/verify', {
+   *   method: 'POST',
+   *   headers: { 'X-Enclave-Auth': process.env.ENCLAVE_TOKEN },
+   *   body: JSON.stringify({ consumer_id, payment_amount })
+   * });
+   * ```
+   */
+  private async mockAwsEnclaveVerification(
+    consumer_id: string,
+    payment_amount: number,
+  ): Promise<{ status: 'yes' | 'no' | 'cannot_confirm'; message: string }> {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Mock logic: randomly determine coverage
+    // In production, this would be actual bank account verification
+    const random = Math.random();
+
+    if (random < 0.7) {
+      // 70% chance: sufficient funds
+      return {
+        status: 'yes',
+        message: `Funds verified for $${payment_amount.toLocaleString()} payment`,
+      };
+    } else if (random < 0.9) {
+      // 20% chance: insufficient funds
+      return {
+        status: 'no',
+        message: `Insufficient funds for $${payment_amount.toLocaleString()} payment`,
+      };
+    } else {
+      // 10% chance: cannot confirm (bank API down, account closed, etc.)
+      return {
+        status: 'cannot_confirm',
+        message: 'Unable to verify account status at this time',
+      };
+    }
   }
 }
