@@ -1,108 +1,117 @@
-# Accord Debt Collection AI Agent
+# Debt Collection AI Agent
 
-An ElevenLabs conversational AI agent for FDCPA-compliant debt collection with multilingual support and intelligent negotiation capabilities.
+This is an AI voice agent I built for handling debt collection calls. It uses ElevenLabs for the voice interface and has all the compliance stuff built in.
 
-## Overview
+## What It Does
 
-**Accord** is a professional debt collection agent powered by ElevenLabs Conversational AI and Gemini 2.0 Flash. The agent (named Dani) handles inbound calls with full compliance, 3-step identity verification, and intelligent payment negotiation in English, Spanish, and Arabic.
+I call the agent "Dani" - she handles inbound calls from people who owe money. The main thing is making sure we verify who they are before talking about any account details (that's a legal requirement).
 
-### Key Features
+Here's what I focused on:
 
-- **🔒 3-Step Identity Verification**: Security challenge system before any debt disclosure  
-- **✅ FDCPA Compliance**: Cease & desist, identity gate, 25% payment floor enforcement  
-- **🌍 Multilingual**: English, Spanish (Español), Arabic (العربية) with automatic language switching  
-- **🤖 Intelligent Negotiation**: Dynamic counter-offer calculation based on consumer proposals  
-- **🛡️ Comprehensive Guardrails**: Content moderation, prompt injection protection, custom floor enforcement  
+- 3-step identity check before discussing anything sensitive
+- Works in English, Spanish, and Arabic (switches automatically)
+- Calculates counter-offers on the fly based on what people offer to pay
+- Has a hard 25% floor - won't accept anything less
+- Stops immediately if someone says "cease and desist"
 
-## Quick Start
+## Running It Locally
 
-### 1. Start Backend Server
+Backend server:
 ```bash
 cd collect-tools
 npm install
 npm start
-# Server runs on http://localhost:3000
 ```
 
-### 2. Deploy to ElevenLabs
+Push to ElevenLabs:
 ```bash
 ./push.sh inbound_collect
 ```
 
-### 3. Test
+Run tests:
 ```bash
 python3 run_tests.py
 ```
 
-##identity Verification Workflow
+## How the Identity Check Works
 
-**Critical Rule**: Agent NEVER discloses debt information before successful identity verification.
+This was tricky to get right. The agent has to:
 
-```
-1. Consumer calls → Agent greets: "Hi, this is Dani from Accord"
-2. Agent asks for consent to record
-3. Agent collects name + date of birth
-4. Agent calls id_challenge tool → Receives security question
-5. Agent asks security question (phone digits)
-6. Consumer provides answer
-7. Agent calls id_approve tool → Gets consumer_id (if verified)
-8. If verified: Agent calls get_debt_details → Gets account balance
-9. NOW agent can discuss debt and negotiate
-```
+1. Start the call and get consent to record
+2. Ask for name and birthday
+3. Call my `id_challenge` endpoint to get a security question
+4. Ask the person that question (usually "what are the last 4 digits of your phone?")
+5. Send their answer to `id_approve`
+6. Only if that passes, call `get_debt_details` to see what they owe
+7. Now we can actually talk about the debt
 
-## Webhook Tools
+The agent is NOT allowed to mention any dollar amounts until step 6 passes.
 
-| Tool | Endpoint | Purpose |
-|------|----------|---------|
-| id_challenge | POST `/id_challenge` | Generate security question |
-| id_approve | POST `/id_approve` | Verify answer, return consumer_id |
-| get_debt_details | POST `/get_debt_details` | Retrieve debt info (post-verification) |
-| negotiate_calc | POST `/negotiate_calc` | Calculate counter-offers |
-| send_outcome | POST `/send_outcome` | Record call outcome |
+## Backend Endpoints
 
-### Test Data
+I set up these webhook tools:
 
-| Consumer | DOB | Phone Last 4 | Balance |
-|----------|-----|--------------|---------|
-| John Smith | 1985-06-15 | 5234 | $3,500 |
-| Anna Berg | 1992-03-20 | 8901 | $4,000 |
-| Carlos Martinez | 1985-06-15 | 3456 | $3,000 |
+- `POST /id_challenge` - generates the security question
+- `POST /id_approve` - checks if the answer is right
+- `POST /get_debt_details` - pulls account info (only works after verification)
+- `POST /negotiate_calc` - does the math for counter-offers
+- `POST /send_outcome` - logs how the call ended
 
-## Compliance Features
+## Test Users
 
-- **Cease & Desist**: Detects in ANY language, stops negotiation, ends call  
-- **Identity Gate**: NO balance disclosure before verification  
-- **25% Payment Floor**: Custom guardrail + negotiate_calc enforcement  
+I have 3 fake accounts in the database for testing:
+
+| Name | Birthday | Phone Last 4 | Balance |
+|------|----------|--------------|---------|
+| John Smith | June 15, 1985 | 5234 | $3,500 |
+| Anna Berg | March 20, 1992 | 8901 | $4,000 |
+| Carlos Martinez | June 15, 1985 | 3456 | $3,000 |
+
+## Compliance Stuff
+
+Had to make sure this follows FDCPA rules:
+
+- If someone says "cease and desist" in ANY language, negotiation stops and the call ends
+- Can't talk about the debt before verifying identity
+- Won't accept payments below 25% of the balance (except in special cases)
 
 ## Testing
 
-- **Automated**: 9 tests via `run_tests.py`  
-- **Voice Scenarios**: 8 scripts in `test_scenarios/` (English/Arabic)  
-- **Documentation**: See `test_scenarios/README.md`  
+I wrote 9 automated tests that run through the ElevenLabs API. There's also 8 voice test scenarios in the `test_scenarios/` folder if you want to manually test the different flows.
 
-## Troubleshooting
+## Common Issues I Ran Into
 
-### Call Disconnects After 1-2 Seconds
+**Agent hangs up after 1-2 seconds:**
 
-**Solution**:
-1. Restart backend server: `cd collect-tools && npm start`
-2. Test endpoints work:
+This happened when the backend wasn't responding fast enough. Fix:
+1. Make sure `npm start` is running in collect-tools
+2. Test the endpoints manually:
 ```bash
 curl http://localhost:3000/
 curl -X POST http://localhost:3000/id_challenge \
   -H "Content-Type: application/json" \
   -d '{"full_name": "John Smith", "date_of_birth": "1985-06-15"}'
 ```
-3. Simplified first_message to avoid premature tool calls
 
-## Documentation
+The first message had to be super simple or the agent would try calling tools before the person even responded.
 
-- **`ELEVENLABS_TOOL_SPECS.md`**: Tool configuration details  
-- **`VIDEO_SCRIPT.txt`**: 5-minute demo script  
-- **`test_scenarios/README.md`**: Voice testing guide  
+## Project Structure
+
+```
+collect-tools/          # Backend server (NestJS)
+agent_configs/          # ElevenLabs agent config
+test_configs/           # Test definitions
+test_scenarios/         # Voice test scripts
+```
 
 ## Links
 
-- **Agent Dashboard**: https://elevenlabs.io/app/agents  
-- **Test Results**: https://elevenlabs.io/app/agents/agent-testing/runs  
-- **GitHub**: https://github.com/melnaquib/corafone-debt-collection-agent  
+- Agent dashboard: https://elevenlabs.io/app/agents
+- Test results: https://elevenlabs.io/app/agents/agent-testing/runs
+
+## Notes to Self
+
+- The 25% floor is enforced both in the custom guardrail AND in the negotiate_calc logic
+- Language switching works but you have to explicitly tell the agent to STAY in that language
+- Identity verification flow took like 10 iterations to get right
+- Webhook timeout is 20 seconds, keep responses fast
