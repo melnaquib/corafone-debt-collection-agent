@@ -8,42 +8,76 @@ import { VerifyPaymentDto, VerifyPaymentResponseDto } from './dto/verify-payment
 export class CollectService {
   /**
    * Calculate counter-offer based on consumer's offer and account balance
-   * Mock implementation - replace with actual business logic
+   * Optionally verifies funds via AWS Enclave if consumer consents
    *
-   * Discount structure (applied BEFORE floor check):
-   * - Full payment (1 payment): 24% discount
-   * - Settlement (2-3 payments): 22% discount
-   * - Payment plan (3 months max): No discount
+   * Discount structure:
+   * - Full payment (1 payment): 24% discount (26% if funds verified)
+   * - 2-payment plan: 22% discount (24% if funds verified)
+   * - 3-payment plan: 20% discount (22% if funds verified)
+   *
+   * Verification bonus: +2% extra discount if funds verified as sufficient
    */
-  calculateNegotiation(dto: NegotiateCalcDto): NegotiateCalcResponseDto {
-    const { account_balance, consumer_offer, attempt_no } = dto;
+  async calculateNegotiation(dto: NegotiateCalcDto): Promise<NegotiateCalcResponseDto> {
+    const { account_balance, consumer_offer, attempt_no, consumer_id, consent_to_verify_funds } = dto;
 
     // 25% floor check
     const floor = Math.round(account_balance * 0.25);
     const meets_floor = consumer_offer >= floor;
 
-    console.log(`[negotiate_calc] balance=${account_balance}, offer=${consumer_offer}, floor=${floor}, meets_floor=${meets_floor}`);
+    console.log(`[negotiate_calc] balance=${account_balance}, offer=${consumer_offer}, floor=${floor}, meets_floor=${meets_floor}, consent_to_verify=${consent_to_verify_funds}`);
+
+    // Check funds if consumer consents
+    let funds_verification_status: 'yes' | 'no' | 'cannot_confirm' | 'not_checked' = 'not_checked';
+    let verification_bonus_applied = false;
+
+    if (consent_to_verify_funds && consumer_id) {
+      console.log(`[negotiate_calc] Verifying funds for consumer ${consumer_id}, amount=${consumer_offer}`);
+      try {
+        const verifyResult = await this.verifyPaymentCoverage({
+          consumer_id,
+          payment_amount: consumer_offer,
+        });
+        funds_verification_status = verifyResult.coverage_status;
+        console.log(`[negotiate_calc] Verification result: ${funds_verification_status}`);
+      } catch (error) {
+        console.error(`[negotiate_calc] Verification failed:`, error);
+        funds_verification_status = 'cannot_confirm';
+      }
+    }
 
     // DISCOUNT LOGIC (not settlement percentages!):
     // 25% floor = minimum per any one payment (floor = 25% of balance)
     // THRESHOLDS based on consumer's offer (% of original balance):
-    // - Offer >= 100% of balance: 1 payment with 24% DISCOUNT → pay 76% of balance
-    // - Offer >= 50% of balance: 2 payments with 22% DISCOUNT → pay 78% of balance split in 2
-    // - Offer >= 25% of balance (floor): 3 payments with 20% DISCOUNT → pay 80% of balance split in 3
+    // - Offer >= 100% of balance: 1 payment with 24% DISCOUNT (26% if verified) → pay 76% (74% verified)
+    // - Offer >= 50% of balance: 2 payments with 22% DISCOUNT (24% if verified) → pay 78% (76% verified) split in 2
+    // - Offer >= 25% of balance (floor): 3 payments with 20% DISCOUNT (22% if verified) → pay 80% (78% verified) split in 3
     // - Offer < 25% floor: reject, ask to increase
+    //
+    // VERIFICATION BONUS: +2% extra discount if funds_verification_status = "yes"
 
     let counter_offer: number;
     let plan_type: string;
     let installments: number;
     let frequency: string;
+    let base_discount = 0;
     let discount_applied = 0;
     let original_amount: number;
 
     if (consumer_offer >= account_balance) {
       // Full payment (1 payment) - 24% DISCOUNT → pay 76% of balance
-      // Example: $4000 balance → pay $3040 in 1 payment, save $960
+      // BONUS: 26% if funds verified → pay 74% of balance
+      // Example: $4000 balance → $3040 standard, $2960 with verification
       original_amount = account_balance;
-      discount_applied = 0.24;
+      base_discount = 0.24;
+
+      // Apply +2% bonus if funds verified
+      if (funds_verification_status === 'yes') {
+        discount_applied = 0.26;
+        verification_bonus_applied = true;
+      } else {
+        discount_applied = base_discount;
+      }
+
       counter_offer = Math.round(account_balance * (1 - discount_applied));
 
       return {
@@ -55,14 +89,27 @@ export class CollectService {
         discount_percent: discount_applied * 100,
         original_amount,
         savings_amount: original_amount - counter_offer,
+        funds_verification_status,
+        funds_verified: funds_verification_status === 'yes',
+        verification_bonus_applied,
       };
     }
 
     if (consumer_offer >= account_balance * 0.5) {
       // 2-payment plan - 22% DISCOUNT → pay 78% of balance split in 2
-      // Example: $4000 balance → pay $3120 total = $1560 per payment, save $880
+      // BONUS: 24% if funds verified → pay 76% of balance split in 2
+      // Example: $4000 balance → $1560/payment standard, $1520/payment with verification
       original_amount = account_balance;
-      discount_applied = 0.22;
+      base_discount = 0.22;
+
+      // Apply +2% bonus if funds verified
+      if (funds_verification_status === 'yes') {
+        discount_applied = 0.24;
+        verification_bonus_applied = true;
+      } else {
+        discount_applied = base_discount;
+      }
+
       const total_discounted = Math.round(account_balance * (1 - discount_applied));
       counter_offer = Math.round(total_discounted / 2); // Per payment amount
 
@@ -75,14 +122,27 @@ export class CollectService {
         discount_percent: discount_applied * 100,
         original_amount,
         savings_amount: original_amount - total_discounted,
+        funds_verification_status,
+        funds_verified: funds_verification_status === 'yes',
+        verification_bonus_applied,
       };
     }
 
     if (consumer_offer >= floor) {
       // 3-payment plan (MAX) - 20% DISCOUNT → pay 80% of balance split in 3
-      // Example: $4000 balance → pay $3200 total = $1067 per payment, save $800
+      // BONUS: 22% if funds verified → pay 78% of balance split in 3
+      // Example: $4000 balance → $1067/payment standard, $1040/payment with verification
       original_amount = account_balance;
-      discount_applied = 0.20;
+      base_discount = 0.20;
+
+      // Apply +2% bonus if funds verified
+      if (funds_verification_status === 'yes') {
+        discount_applied = 0.22;
+        verification_bonus_applied = true;
+      } else {
+        discount_applied = base_discount;
+      }
+
       const total_discounted = Math.round(account_balance * (1 - discount_applied));
       counter_offer = Math.round(total_discounted / 3); // Per payment amount
 
@@ -95,6 +155,9 @@ export class CollectService {
         discount_percent: discount_applied * 100,
         original_amount,
         savings_amount: original_amount - total_discounted,
+        funds_verification_status,
+        funds_verified: funds_verification_status === 'yes',
+        verification_bonus_applied,
       };
     }
 
@@ -106,6 +169,9 @@ export class CollectService {
       installments: 1,
       frequency: 'n_a',
       discount_percent: 0,
+      funds_verification_status,
+      funds_verified: false,
+      verification_bonus_applied: false,
     };
   }
 

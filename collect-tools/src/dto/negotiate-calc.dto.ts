@@ -9,6 +9,17 @@ export class NegotiateCalcDto {
 
   @ApiProperty({ description: 'Negotiation attempt number (1 or 2)', example: 1 })
   attempt_no: number;
+
+  @ApiProperty({ description: 'Consumer ID from identity verification', example: 'cust_001', required: false })
+  consumer_id?: string;
+
+  @ApiProperty({
+    description: 'Whether consumer consents to bank balance verification. If true and consumer_id provided, will check funds via AWS Enclave and offer better terms if verified.',
+    example: true,
+    required: false,
+    default: false
+  })
+  consent_to_verify_funds?: boolean;
 }
 
 export class NegotiateCalcResponseDto {
@@ -27,7 +38,7 @@ export class NegotiateCalcResponseDto {
   @ApiProperty({ description: 'Payment frequency', example: 'monthly', required: false })
   frequency?: string;
 
-  @ApiProperty({ description: 'Discount percentage applied (0-24)', example: 24, required: false })
+  @ApiProperty({ description: 'Discount percentage applied (0-26)', example: 24, required: false })
   discount_percent?: number;
 
   @ApiProperty({ description: 'Original amount before discount', example: 3500, required: false })
@@ -35,4 +46,26 @@ export class NegotiateCalcResponseDto {
 
   @ApiProperty({ description: 'Total savings from discount', example: 840, required: false })
   savings_amount?: number;
+
+  @ApiProperty({
+    description: 'Bank funds verification status: yes (verified sufficient), no (insufficient), cannot_confirm (unavailable), not_checked (no consent)',
+    example: 'yes',
+    enum: ['yes', 'no', 'cannot_confirm', 'not_checked'],
+    required: false
+  })
+  funds_verification_status?: 'yes' | 'no' | 'cannot_confirm' | 'not_checked';
+
+  @ApiProperty({
+    description: 'Whether funds were verified as sufficient (true only if status=yes)',
+    example: true,
+    required: false
+  })
+  funds_verified?: boolean;
+
+  @ApiProperty({
+    description: 'Whether an extra discount bonus was applied due to verified funds',
+    example: true,
+    required: false
+  })
+  verification_bonus_applied?: boolean;
 }

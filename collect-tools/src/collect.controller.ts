@@ -22,9 +22,9 @@ export class CollectController {
   }
 
   @Post('/negotiate_calc')
-  @ApiOperation({ summary: 'Calculate negotiation counter-offer' })
+  @ApiOperation({ summary: 'Calculate negotiation counter-offer with optional bank verification' })
   @ApiResponse({ status: 200, description: 'Counter-offer calculated', type: NegotiateCalcResponseDto })
-  negotiateCalc(@Body() dto: NegotiateCalcDto): NegotiateCalcResponseDto {
+  async negotiateCalc(@Body() dto: NegotiateCalcDto): Promise<NegotiateCalcResponseDto> {
     console.log('negotiate_calc called:', dto);
     return this.collectService.calculateNegotiation(dto);
   }

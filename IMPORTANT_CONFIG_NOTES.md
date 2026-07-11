@@ -194,12 +194,25 @@ The agent has access to these MCP server tools via `@rekog/mcp-nest`:
 - **When to use**: ONLY after id_approve returns verified=true
 - **CRITICAL**: NEVER call this before identity is verified
 
-### 4. **negotiate_calc** (Calculate Counter-Offer)
-- **Purpose**: Calculate settlement offer based on consumer's proposed payment
-- **Input**: `account_balance`, `consumer_offer`, `attempt_no` (1 or 2)
-- **Output**: `counter_offer`, `plan_type`, `meets_floor`, discount info
-- **When to use**: After consumer states what they can pay
+### 4. **negotiate_calc** (Calculate Counter-Offer with Optional Verification)
+- **Purpose**: Calculate settlement offer based on consumer's proposed payment, with optional bank verification for better terms
+- **Input**:
+  - `account_balance`: Current balance owed
+  - `consumer_offer`: Amount consumer offered to pay
+  - `attempt_no`: Negotiation round (1 or 2)
+  - `consumer_id`: Consumer ID from verification (required if consent_to_verify_funds=true)
+  - `consent_to_verify_funds`: Boolean - if true, verifies funds via AWS Enclave and applies +2% bonus if verified
+- **Output**:
+  - `counter_offer`, `plan_type`, `meets_floor`, `discount_percent`, `savings_amount`
+  - `funds_verification_status`: 'yes' | 'no' | 'cannot_confirm' | 'not_checked'
+  - `funds_verified`: Boolean (true only if status='yes')
+  - `verification_bonus_applied`: Boolean (true if extra 2% discount was given)
+- **When to use**: After consumer states what they can pay AND after asking for verification consent
 - **CRITICAL**: ALWAYS use this tool, never invent payment amounts
+- **Verification Bonus**: If funds verify as sufficient, consumer gets EXTRA 2% discount:
+  - Full payment: 24% → 26%
+  - 2-payment: 22% → 24%
+  - 3-payment: 20% → 22%
 
 ### 5. **verify_payment_coverage** (NEW - Bank Account Verification)
 - **Purpose**: Check if consumer has sufficient funds via AWS Enclave
@@ -249,4 +262,68 @@ Agent: [Call verify_payment_coverage with consumer_id, 3040]
   → Response: coverage_status="yes"
 Agent: "Perfect! I've confirmed that works. Let me get your confirmation number..."
 ```
+
+
+---
+
+## Bank Verification Consent Workflow (NEW)
+
+After consumer proposes a payment amount, the agent MUST ask for consent to verify funds before calculating the offer.
+
+### The Privacy-Preserving Consent Script:
+
+**Agent says:**
+> "Perfect. To give you the best possible settlement terms, I can check if your bank account covers this amount using Advanced Tech that maintains the highest level of privacy - it won't reveal your balance, and won't tell your bank who's checking, for what amount, or why. May I run that quick verification?"
+
+### Key Privacy Points to Emphasize:
+1. **Won't reveal balance**: System never sees or discloses actual account balance
+2. **Won't tell bank who**: Bank doesn't know it's a debt collector checking
+3. **Won't tell bank amount**: Bank doesn't know what amount is being verified
+4. **Won't tell bank why**: Bank doesn't know the purpose of the check
+5. **Best possible terms**: Incentive - verified funds = extra 2% discount
+
+### Workflow Steps:
+
+1. **Capture Offer Node**: 
+   - Ask "How much can you pay?"
+   - Get payment amount
+   - **IMMEDIATELY** ask for verification consent (script above)
+   - Record yes/no consent
+   - Do NOT calculate offer yet
+
+2. **Calc Negotiation Node**:
+   - Call `negotiate_calc` with `consent_to_verify_funds=true/false`
+   - If consent=true, pass `consumer_id` from identity verification
+   - Tool automatically verifies funds if consent given
+   - Tool returns verification status and applies bonus if verified
+
+3. **Present Counter Node**:
+   - Check `verification_bonus_applied` field
+   - If true: "Excellent! Your funds verified, so I'm able to give you an even better deal with an extra 2% discount!"
+   - State offer with enthusiasm
+   - If bonus applied, mention: "That's the verified funds bonus working for you!"
+
+### Incentive Structure:
+
+| Payment Plan | Standard Discount | With Verified Funds | Extra Savings |
+|--------------|-------------------|---------------------|---------------|
+| 1 payment    | 24% off           | 26% off             | +2%          |
+| 2 payments   | 22% off           | 24% off             | +2%          |
+| 3 payments   | 20% off           | 22% off             | +2%          |
+
+**Example:** $4,000 balance, full payment offer
+- Standard: Pay $3,040, save $960 (24%)
+- Verified: Pay $2,960, save $1,040 (26%) - **$80 more savings!**
+
+### If Consumer Declines Consent:
+
+That's perfectly fine! Proceed with standard discount tiers. Simply call `negotiate_calc` with `consent_to_verify_funds=false` or omit the parameter. Consumer still gets 20-24% discount, just not the +2% bonus.
+
+### If Verification Returns "No" (Insufficient Funds):
+
+Still give the standard offer! The tool already handled this. Just present the counter-offer normally. Don't mention that funds were insufficient - that's private information.
+
+### If Verification Returns "Cannot Confirm":
+
+Treat same as "no consent" - give standard offer. The system was unavailable, so proceed without bonus.
 
