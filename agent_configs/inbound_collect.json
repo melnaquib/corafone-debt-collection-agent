@@ -74,15 +74,9 @@
         },
         "language_presets": {
             "es": {
-                "tts": {
-                    "voice_id": "21m00Tcm4TlvDq8ikWAM"
-                },
                 "overrides": {}
             },
             "ar": {
-                "tts": {
-                    "voice_id": "21m00Tcm4TlvDq8ikWAM"
-                },
                 "overrides": {}
             }
         },
@@ -626,7 +620,7 @@
                     "e2"
                 ],
                 "conversation_config": {},
-                "additional_prompt": "CRITICAL ORDER: (1) First confirm consent to record, (2) THEN verify identity by asking for full name and date of birth. NEVER disclose any balance, amount owed, or account details until BOTH consent and identity are confirmed. If the consumer provides their name/DOB immediately, say 'Thank you' then STILL ask for consent to record before proceeding with verification. If they ask about their balance before identity verification, politely redirect: 'I'd be happy to help with that - I just need to verify your identity first. May I have your full name and date of birth?' If they refuse recording, offer a non-recorded callback and end. IMPORTANT: Maintain the language they speak - if Spanish, stay in Spanish; if Arabic, stay in Arabic.",
+                "additional_prompt": "CRITICAL ORDER: (1) First confirm consent to record, (2) THEN verify identity by asking for full name and date of birth. NEVER disclose any balance, amount owed, or account details until BOTH consent and identity are confirmed. If the consumer provides their name/DOB immediately, say 'Thank you' then STILL ask for consent to record before proceeding with verification. If they ask about their balance before identity verification, politely redirect: 'I'd be happy to help with that - I just need to verify your identity first. May I have your full name and date of birth?' If they refuse recording, offer a non-recorded callback and end. CEASE-AND-DESIST OVERRIDE: If the consumer says 'cease and desist', 'stop calling', 'do not contact me', or ANY similar request to stop contact, IMMEDIATELY stop all other actions. Say: 'I understand. I will note your request to cease contact. This does not erase the debt, but we will stop calling you. Goodbye.' Then END the call. Do NOT transfer to another agent. Do NOT continue negotiating. IMPORTANT: Maintain the language they speak - if Spanish, stay in Spanish; if Arabic, stay in Arabic.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
                 "label": "Disclosure + Identity",
@@ -643,7 +637,7 @@
                     "e11"
                 ],
                 "conversation_config": {},
-                "additional_prompt": "State the balance owed. Ask what the consumer can pay today. Anchor high: mention full payment as the first, preferred option before any discount. Capture their answer as consumer_offer — do not calculate anything yourself. LANGUAGE RULE: Continue speaking in the same language the consumer is using (Spanish → Spanish, Arabic → Arabic, English → English). DO NOT switch languages.",
+                "additional_prompt": "State the balance owed. Ask what the consumer can pay today. Anchor high: mention full payment as the first, preferred option before any discount. Capture their answer as consumer_offer — do not calculate anything yourself. CEASE-AND-DESIST: If consumer says 'cease and desist' or 'stop calling', IMMEDIATELY acknowledge: 'I understand. I will note your request to cease contact. This does not erase the debt, but we will stop calling you. Goodbye.' Then END the call. Do NOT transfer. Do NOT negotiate further. LANGUAGE RULE: Continue speaking in the same language the consumer is using (Spanish → Spanish, Arabic → Arabic, English → English). DO NOT switch languages.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
                 "label": "Capture Offer",
@@ -694,7 +688,7 @@
                     "e12"
                 ],
                 "conversation_config": {},
-                "additional_prompt": "State the counter-offer returned by the tool as your number, not one you invented. IMPORTANT: If negotiate_calc returned discount_percent and savings_amount, mention the value: 'If you can pay [counter_offer] today, you'll save [savings_amount] - that's [discount_percent]% off!' If they push back, either hold firm (restate the value of settling now and the discount savings, calmly, don't repeat the same line twice) or offer a creative trade (e.g. biweekly instead of monthly, or a different due date) for a higher amount, before ever discounting further. If they go quiet after you state the number, wait — do not fill silence by lowering it yourself.",
+                "additional_prompt": "State the counter-offer returned by the tool as your number, not one you invented. IMPORTANT: If negotiate_calc returned discount_percent and savings_amount, mention the value: 'If you can pay [counter_offer] today, you'll save [savings_amount] - that's [discount_percent]% off!' If they push back, either hold firm (restate the value of settling now and the discount savings, calmly, don't repeat the same line twice) or offer a creative trade (e.g. biweekly instead of monthly, or a different due date) for a higher amount, before ever discounting further. If they go quiet after you state the number, wait — do not fill silence by lowering it yourself. CEASE-AND-DESIST: If consumer says 'cease and desist' or 'stop calling', IMMEDIATELY stop negotiating and say: 'I understand. I will note your request to cease contact. This does not erase the debt, but we will stop calling you. Goodbye.' Then END the call. Do NOT transfer to another agent.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
                 "label": "Present Counter-Offer",
