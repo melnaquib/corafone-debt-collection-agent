@@ -162,7 +162,9 @@
                     "run_subagent": null
                 },
                 "enable_parallel_tool_calls": false,
-                "mcp_server_ids": [],
+                "mcp_server_ids": [
+                    "BZGtIqkgvwvNiRpJW5gX"
+                ],
                 "native_mcp_server_ids": [],
                 "knowledge_base": [
                     {
@@ -508,7 +510,7 @@
                 "target": "no_agreement",
                 "forward_condition": {
                     "type": "llm",
-                    "condition": "meets_floor is false and consumer cannot increase offer"
+                    "condition": "agent explicitly asked consumer to increase their payment to meet the minimum floor amount AND consumer explicitly refused or said they cannot pay more or said that is their final offer"
                 }
             },
             "e4": {

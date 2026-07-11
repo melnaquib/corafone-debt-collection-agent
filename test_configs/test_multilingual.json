@@ -17,7 +17,7 @@
       "message": "Solo puedo pagar 500 dólares."
     }
   ],
-  "success_condition": "Agent continues the conversation in Spanish from that point on, without breaking negotiation logic or reverting to English unprompted.",
+  "success_condition": "Agent may call language_detection tool (which will be skipped in test mode) and then continues the conversation in Spanish from that point on, without breaking negotiation logic or reverting to English unprompted. The agent must provide a substantive response after language detection.",
   "success_examples": [
     {
       "response": "Entiendo. Déjame verificar qué podemos ofrecerte. 500 dólares está por debajo del mínimo, pero podemos discutir otras opciones.",
