@@ -51,9 +51,13 @@ Multiple nodes have "CEASE-AND-DESIST OVERRIDE" instructions:
 - present_counter
 
 **CRITICAL**: Agent must explicitly be told "Do NOT call transfer_to_agent tool" because:
-- Workflow edge `e2` no longer routes cease-and-desist to no_agreement node
-- Cease-and-desist is handled entirely within each node
+- **ALL workflow edges for cease-and-desist have been REMOVED**
+  - e2 (from disclosure_identity) - REMOVED cease-and-desist condition
+  - e11 (from capture_offer) - DELETED ENTIRELY
+  - e12 (from present_counter) - DELETED ENTIRELY
+- Cease-and-desist is handled entirely within each node's prompt
 - Agent just says goodbye message and stops talking (no tools, no routing)
+- This prevents workflow routing from triggering transfer_to_agent calls
 
 **DO NOT:**
 - Remove these instructions
