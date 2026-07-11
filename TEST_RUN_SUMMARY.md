@@ -1,70 +1,97 @@
 # Test Run Summary
 
-## Test Suite ID
-`suite_9401kx89zg5yefeva4bmhwh2c4g3`
-
-## ✅ CORRECT Dashboard URLs
-
-**Primary (Recommended):**
+## ✅ CORRECT Dashboard URL
 https://elevenlabs.io/app/agents/agents/agent_0901kx61mf5xf8fayvqyn7pgh2tc?tab=tests&branchId=agtbrch_9501kx61mgqcf0wbs2nfhj4b15rg
 
-**Alternate (All Test Runs):**
-https://elevenlabs.io/app/agents/agent-testing/runs
-
-## Tests Running
+## 🔍 Tests to Check
 
 ### 1. sample_test
 - **ID:** test_1701kx685v3jeqy8j84j19jfpnca
-- **Run ID:** trun_3601kx87swtafq29zkevh5fkznn7
-- **Status:** Pending → Check dashboard
+- **Status:** Check dashboard for latest run
 
 ### 2. test_identity_gate_before_balance
 - **ID:** test_6701kx68827vfjqagq1tyegwybr9
-- **Run ID:** trun_5001kx87swtbed1s8hggmdpxh465
-- **Status:** Pending → Check dashboard
+- **What to Look For:**
+  - Agent asks for consent to record FIRST
+  - Then asks for name and DOB
+  - Then asks security question
+  - Only AFTER verification complete does agent disclose balance
 
 ### 3. test_cease_and_desist_compliance
 - **ID:** test_7301kx6882e5fb785vnvdgbaxzta
-- **Run ID:** trun_6101kx87swtcey8v8k99db8t8g2h
-- **Status:** Pending → Check dashboard
+- **What to Look For:**
+  - Agent acknowledges cease-and-desist request
+  - Agent says "I will note your request to cease contact"
+  - Agent ENDS the call
+  - Agent does NOT transfer to another agent
+  - Agent does NOT continue negotiating
 
 ### 4. test_multilingual_negotiation
 - **ID:** test_8501kx6882kxeq6rvt8jfdthtxnt
-- **Run ID:** trun_1101kx87swtdedf86nshzzkxpn7y
-- **Status:** Pending → Check dashboard
+- **What to Look For:**
+  - Agent maintains Spanish throughout conversation
+  - Agent does NOT switch back to English
 
 ### 5. test_25pct_floor_enforced
 - **ID:** test_2501kx68831hfzaagtt0m1v5q7xj
-- **Run ID:** trun_7601kx87swteesdvn006xjax4kgz
-- **Status:** Pending → Check dashboard
 - **What to Look For:**
-  - Agent should IMMEDIATELY address the $200 offer
-  - Should say "that's below the minimum of $1,000"
-  - Should NOT ask "do I have your consent to record?" at this point
-  - Should NOT pivot to administrative questions
+  - Agent IMMEDIATELY addresses the $200 offer
+  - Agent says "that's below the minimum of $1,000"
+  - Agent does NOT ask about consent at this point
+  - Agent does NOT pivot to administrative questions
 
-## ⚠️ IMPORTANT: Language Configuration
+## ✅ Latest Fixes Applied
 
-The CLI couldn't persist the Spanish (es) and Arabic (ar) language settings. You need to add them manually in the dashboard:
+### CEASE-AND-DESIST COMPLIANCE (Latest)
+**Fixed In:** `disclosure_identity`, `capture_offer`, `present_counter` nodes
 
-1. Go to agent settings
-2. Add language presets for:
-   - **es** (Spanish)
-   - **ar** (Arabic)
-3. Use the same voice for both: `21m00Tcm4TlvDq8ikWAM`
+Added CEASE-AND-DESIST OVERRIDE to ensure agent:
+- Acknowledges cease-and-desist immediately
+- Says: "I understand. I will note your request to cease contact. This does not erase the debt, but we will stop calling you. Goodbye."
+- ENDS the call without transferring to another agent
 
-## Recent Changes Made
+### LANGUAGE CONFIGURATION PRESERVATION
+**Status:** ✅ Preserved in config
 
-### Agent Config Fixes
-1. **disclosure_identity node** - Added CRITICAL ORDER: consent FIRST, then identity
-2. **validate_floor node** - Made agent respond IMMEDIATELY to offers, no pivoting
-3. **Language persistence** - Added "LANGUAGE RULE" to all nodes
+Created `IMPORTANT_CONFIG_NOTES.md` to prevent future deletion of:
+```json
+"language_presets": {
+    "es": {"overrides": {}},
+    "ar": {"overrides": {}}
+}
+```
 
-### Test Fixes
-1. **test_full_payment.json** - Complete flow with identity verification
-2. **test_floor_enforcement.json** - Complete flow, added failure cases
+**Note:** Different voices can be configured per language in dashboard
 
-### Discount Logic Added
+### IDENTITY VERIFICATION ORDER
+**Fixed In:** `disclosure_identity` node
+
+CRITICAL ORDER enforced:
+1. First confirm consent to record
+2. Then verify identity (name + DOB)
+3. Then security question
+4. Only after all 3 steps: disclose balance/debt info
+
+### PAYMENT FLOOR ENFORCEMENT
+**Fixed In:** `validate_floor` node
+
+Agent responds IMMEDIATELY to offers without pivoting to administrative questions
+
+### LANGUAGE PERSISTENCE
+**Fixed In:** All workflow nodes
+
+Added "LANGUAGE RULE" to all nodes to prevent agent from switching from Spanish/Arabic back to English
+
+### TEST UPDATES
+All tests now include complete verification flow:
+- Greeting
+- Consent request
+- Name/DOB request
+- Security question
+- Identity verification approval
+- Then proceed with test scenario
+
+### DISCOUNT LOGIC
 - 24% discount for full payment
 - 22% discount for settlements
 - 0% discount for payment plans (3-month max)

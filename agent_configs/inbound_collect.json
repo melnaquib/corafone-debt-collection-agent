@@ -74,10 +74,26 @@
         },
         "language_presets": {
             "es": {
-                "overrides": {}
+                "overrides": {
+                    "agent": {
+                        "first_message": "Hola, soy Dani de Accord."
+                    }
+                },
+                "first_message_translation": {
+                    "source_hash": "{\"firstMessage\":\"Hi, this is Dani from Accord.\",\"language\":\"en\"}",
+                    "text": "Hola, soy Dani de Accord."
+                }
             },
             "ar": {
-                "overrides": {}
+                "overrides": {
+                    "agent": {
+                        "first_message": "مرحبًا، هذه داني من أكورد."
+                    }
+                },
+                "first_message_translation": {
+                    "source_hash": "{\"firstMessage\":\"Hi, this is Dani from Accord.\",\"language\":\"en\"}",
+                    "text": "مرحبًا، هذه داني من أكورد."
+                }
             }
         },
         "vad": {
@@ -148,7 +164,20 @@
                 "enable_parallel_tool_calls": false,
                 "mcp_server_ids": [],
                 "native_mcp_server_ids": [],
-                "knowledge_base": [],
+                "knowledge_base": [
+                    {
+                        "type": "file",
+                        "name": "prompt_tactics_for_negotiate.txt",
+                        "id": "wpi6Na2oe7qAzbKppXiI",
+                        "usage_mode": "auto"
+                    },
+                    {
+                        "type": "file",
+                        "name": "Debt Collection Compliance & Script...",
+                        "id": "LKYDfdkuUmy0FKpi56ii",
+                        "usage_mode": "auto"
+                    }
+                ],
                 "speech_engine": null,
                 "ignore_default_personality": false,
                 "rag": {
@@ -271,7 +300,7 @@
                 },
                 "agent": {
                     "first_message": false,
-                    "language": false,
+                    "language": true,
                     "max_conversation_duration_message": false,
                     "prompt": {
                         "prompt": false,
@@ -449,7 +478,7 @@
                 "target": "no_agreement",
                 "forward_condition": {
                     "type": "llm",
-                    "condition": "consumer refuses recording or cannot verify identity OR consumer says cease and desist / stop calling"
+                    "condition": "consumer refuses recording or cannot verify identity"
                 }
             },
             "e3": {
@@ -619,8 +648,14 @@
                     "e1",
                     "e2"
                 ],
-                "conversation_config": {},
-                "additional_prompt": "CRITICAL ORDER: (1) First confirm consent to record, (2) THEN verify identity by asking for full name and date of birth. NEVER disclose any balance, amount owed, or account details until BOTH consent and identity are confirmed. If the consumer provides their name/DOB immediately, say 'Thank you' then STILL ask for consent to record before proceeding with verification. If they ask about their balance before identity verification, politely redirect: 'I'd be happy to help with that - I just need to verify your identity first. May I have your full name and date of birth?' If they refuse recording, offer a non-recorded callback and end. CEASE-AND-DESIST OVERRIDE: If the consumer says 'cease and desist', 'stop calling', 'do not contact me', or ANY similar request to stop contact, IMMEDIATELY stop all other actions. Say: 'I understand. I will note your request to cease contact. This does not erase the debt, but we will stop calling you. Goodbye.' Then END the call. Do NOT transfer to another agent. Do NOT continue negotiating. IMPORTANT: Maintain the language they speak - if Spanish, stay in Spanish; if Arabic, stay in Arabic.",
+                "conversation_config": {
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
+                "additional_prompt": "CRITICAL ORDER: (1) First confirm consent to record, (2) THEN verify identity by asking for full name and date of birth. NEVER disclose any balance, amount owed, or account details until BOTH consent and identity are confirmed. If the consumer provides their name/DOB immediately, say 'Thank you' then STILL ask for consent to record before proceeding with verification. If they ask about their balance before identity verification, politely redirect: 'I'd be happy to help with that - I just need to verify your identity first. May I have your full name and date of birth?' If they refuse recording, offer a non-recorded callback and end. CEASE-AND-DESIST OVERRIDE: If the consumer says 'cease and desist', 'stop calling', 'do not contact me', or ANY similar request to stop contact, IMMEDIATELY stop all other actions. Say: 'I understand. I will note your request to cease contact. This does not erase the debt, but we will stop calling you. Goodbye.' Then just stop talking. Do NOT call transfer_to_agent tool. Do NOT call any tools. Do NOT continue the conversation. Just say the goodbye message and stop. IMPORTANT: Maintain the language they speak - if Spanish, stay in Spanish; if Arabic, stay in Arabic.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
                 "label": "Disclosure + Identity",
@@ -636,8 +671,14 @@
                     "e3",
                     "e11"
                 ],
-                "conversation_config": {},
-                "additional_prompt": "State the balance owed. Ask what the consumer can pay today. Anchor high: mention full payment as the first, preferred option before any discount. Capture their answer as consumer_offer — do not calculate anything yourself. CEASE-AND-DESIST: If consumer says 'cease and desist' or 'stop calling', IMMEDIATELY acknowledge: 'I understand. I will note your request to cease contact. This does not erase the debt, but we will stop calling you. Goodbye.' Then END the call. Do NOT transfer. Do NOT negotiate further. LANGUAGE RULE: Continue speaking in the same language the consumer is using (Spanish → Spanish, Arabic → Arabic, English → English). DO NOT switch languages.",
+                "conversation_config": {
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
+                "additional_prompt": "State the balance owed. Ask what the consumer can pay today. Anchor high: mention full payment as the first, preferred option before any discount. Capture their answer as consumer_offer — do not calculate anything yourself. CEASE-AND-DESIST: If consumer says 'cease and desist' or 'stop calling', IMMEDIATELY acknowledge: 'I understand. I will note your request to cease contact. This does not erase the debt, but we will stop calling you. Goodbye.' Then just stop talking. Do NOT call transfer_to_agent tool. Do NOT call any tools. Do NOT continue the conversation. Just say the goodbye message and stop. LANGUAGE RULE: Continue speaking in the same language the consumer is using (Spanish → Spanish, Arabic → Arabic, English → English). DO NOT switch languages.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
                 "label": "Capture Offer",
@@ -652,7 +693,13 @@
                 "edge_order": [
                     "e3a"
                 ],
-                "conversation_config": {},
+                "conversation_config": {
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
                 "additional_prompt": "You MUST call the negotiate_calc tool now with the consumer's offered amount. Wait for the tool response - it will return a counter_offer, plan_type, and meets_floor. Do NOT say anything to the consumer yet - just call the tool and wait. Do NOT invent payment amounts yourself.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
@@ -669,7 +716,13 @@
                     "e3b",
                     "e3c"
                 ],
-                "conversation_config": {},
+                "conversation_config": {
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
                 "additional_prompt": "You MUST check the negotiate_calc tool result. Look at the meets_floor field in the response. If meets_floor=false, you MUST respond IMMEDIATELY to address their offer. Say something like: 'I appreciate you offering [their amount], but unfortunately that's below the minimum we can accept, which is [floor amount] - that's 25% of your balance. Can you do [floor amount]?' Ask if they can increase their payment. Do NOT present any counter-offer if meets_floor is false. Do NOT ask about recording consent at this point. Only proceed to present_counter if meets_floor is true. LANGUAGE RULE: Stay in the same language they're speaking.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
@@ -687,8 +740,14 @@
                     "e5",
                     "e12"
                 ],
-                "conversation_config": {},
-                "additional_prompt": "State the counter-offer returned by the tool as your number, not one you invented. IMPORTANT: If negotiate_calc returned discount_percent and savings_amount, mention the value: 'If you can pay [counter_offer] today, you'll save [savings_amount] - that's [discount_percent]% off!' If they push back, either hold firm (restate the value of settling now and the discount savings, calmly, don't repeat the same line twice) or offer a creative trade (e.g. biweekly instead of monthly, or a different due date) for a higher amount, before ever discounting further. If they go quiet after you state the number, wait — do not fill silence by lowering it yourself. CEASE-AND-DESIST: If consumer says 'cease and desist' or 'stop calling', IMMEDIATELY stop negotiating and say: 'I understand. I will note your request to cease contact. This does not erase the debt, but we will stop calling you. Goodbye.' Then END the call. Do NOT transfer to another agent.",
+                "conversation_config": {
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
+                "additional_prompt": "State the counter-offer returned by the tool as your number, not one you invented. IMPORTANT: If negotiate_calc returned discount_percent and savings_amount, mention the value: 'If you can pay [counter_offer] today, you'll save [savings_amount] - that's [discount_percent]% off!' If they push back, either hold firm (restate the value of settling now and the discount savings, calmly, don't repeat the same line twice) or offer a creative trade (e.g. biweekly instead of monthly, or a different due date) for a higher amount, before ever discounting further. If they go quiet after you state the number, wait — do not fill silence by lowering it yourself. CEASE-AND-DESIST: If consumer says 'cease and desist' or 'stop calling', IMMEDIATELY stop negotiating and say: 'I understand. I will note your request to cease contact. This does not erase the debt, but we will stop calling you. Goodbye.' Then just stop talking. Do NOT call transfer_to_agent tool. Do NOT call any tools. Do NOT continue the conversation. Just say the goodbye message and stop.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
                 "label": "Present Counter-Offer",
@@ -703,7 +762,13 @@
                 "edge_order": [
                     "e4a"
                 ],
-                "conversation_config": {},
+                "conversation_config": {
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
                 "additional_prompt": "Call the negotiate_calc tool again to calculate a second counter-offer. Wait for the result.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
@@ -720,7 +785,13 @@
                     "e4b",
                     "e4c"
                 ],
-                "conversation_config": {},
+                "conversation_config": {
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
                 "additional_prompt": "Check the negotiate_calc result from the second negotiation round. If meets_floor is false, explain that we've reached the minimum threshold and cannot go lower. Route to NO_AGREEMENT if they cannot meet the floor. If meets_floor is true, proceed to present the final counter-offer.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
@@ -739,7 +810,13 @@
                     "e8",
                     "e9"
                 ],
-                "conversation_config": {},
+                "conversation_config": {
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
                 "additional_prompt": "Get explicit verbal confirmation of amount, payment method, and date before closing. Do not take the first maybe as a yes.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
@@ -755,7 +832,13 @@
                 "edge_order": [
                     "e13"
                 ],
-                "conversation_config": {},
+                "conversation_config": {
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
                 "additional_prompt": "Confirm full payment or highest downpayment plus one more payment. IMPORTANT: Check the negotiate_calc response for discount_percent and savings_amount fields. If present, mention the savings: 'By paying in full today, you're saving [savings_amount] - that's a [discount_percent]% discount!' Restate the final amount after discount, payment date(s), and payment method. Provide a confirmation reference. Create urgency by emphasizing this is a limited-time settlement offer.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
@@ -771,7 +854,13 @@
                 "edge_order": [
                     "e14"
                 ],
-                "conversation_config": {},
+                "conversation_config": {
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
                 "additional_prompt": "Confirm settlement terms: maximum 3 payments. IMPORTANT: Check the negotiate_calc response for discount_percent and savings_amount. If present, emphasize the savings: 'This settlement saves you [savings_amount] - that's [discount_percent]% off the original amount!' Read back the full payment schedule with dates and amounts. Get an explicit logged verbal consent statement from the consumer confirming they agree to the settlement terms before finishing.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
@@ -787,7 +876,13 @@
                 "edge_order": [
                     "e15"
                 ],
-                "conversation_config": {},
+                "conversation_config": {
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
                 "additional_prompt": "Confirm payment plan: MAXIMUM 3 months only, weekly/biweekly/monthly frequency options. No discount applies to payment plans (payment plans pay full balance). Smallest payment must be at least 25% of balance. Read back the full payment schedule with specific dates and amounts for each payment. Optionally mention: 'If you're able to pay in full instead, you could save up to 24% - but this payment plan works too if you need it.'",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
@@ -803,7 +898,13 @@
                 "edge_order": [
                     "e16"
                 ],
-                "conversation_config": {},
+                "conversation_config": {
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
                 "additional_prompt": "The consumer could not meet the 25% floor, asked to cease contact, or no resolution was reached. Stay calm and respectful. If cease-and-desist was invoked, confirm compliance and do not negotiate further. Otherwise offer a callback. LANGUAGE RULE: Continue in the same language they've been speaking throughout the call.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
@@ -817,7 +918,13 @@
                     "y": 3300
                 },
                 "edge_order": [],
-                "conversation_config": {},
+                "conversation_config": {
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
                 "additional_prompt": "Call the send_outcome tool to report the final call outcome.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
