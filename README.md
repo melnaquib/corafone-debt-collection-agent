@@ -46,11 +46,11 @@ elevenlabs tests push
 5. **Calculate** - Call `negotiate_calc` tool with their offer
 6. **Validate Floor** - Check if offer meets 25% minimum
    - **Below floor** → ask them to increase OR route to no_agreement if they refuse
-   - **Meets floor** → present counter-offer with discount (24% full payment, 22% settlement, 0% plans)
+   - **Meets floor** → present counter-offer with discount (24% for 1 payment, 22% for 2 payments, 20% for 3 payments)
 7. **Close or Continue** - Either close the deal, negotiate further, or route to no_agreement
 8. **Send Outcome** - Report final result (agreement, escalation, no decision)
 
-**Discounts:** 24% off for full payment, 22% for settlements, 0% for payment plans (max 3 months). Accounts for ~3.5% interest and lower risk with faster payment.
+**Discounts:** 24% off for 1 payment, 22% off for 2 payments, 20% off for 3 payments (MAX 3 installments). Accounts for ~3.5% interest and lower risk with faster payment. Consumer offers a payment AMOUNT, not a discount.
 
 ## Outcomes
 1. `agreement_reached` — plan type, total, # payments, frequency

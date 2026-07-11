@@ -85,6 +85,50 @@ Agent: "I'd be happy to help - I just need to verify your identity first. May I 
 
 ---
 
+## Discount Structure (CRITICAL)
+
+**IMPORTANT**: The percentages (24%, 22%, 20%) are DISCOUNTS off the balance, NOT settlement percentages!
+
+### Payment Options & Thresholds:
+
+The consumer offers what they can PAY (not a discount amount). Based on their offer as a % of original balance:
+
+1. **Full Payment (offer >= 100% of balance)**: 24% DISCOUNT → Consumer pays 76% of balance in 1 payment
+   - Plan type: `full_payment`
+   - Example: $4,000 balance → pay $3,040 total, save $960
+   - Edge: e6 routes to `close_full_payment` node
+
+2. **2-Payment Plan (offer >= 50% of balance)**: 22% DISCOUNT → Consumer pays 78% of balance split in 2 payments
+   - Plan type: `payment_plan_2`
+   - Example: $4,000 balance → pay $3,120 total = $1,560 per payment, save $880
+   - Edge: e7 routes to `close_settlement` node (labeled "Close: 2-Payment Plan (22% off)")
+
+3. **3-Payment Plan (offer >= 25% floor)**: 20% DISCOUNT → Consumer pays 80% of balance split in 3 payments
+   - Plan type: `payment_plan_3`
+   - Example: $4,000 balance → pay $3,200 total = $1,067 per payment, save $800
+   - Edge: e8 routes to `close_payment_plan` node (labeled "Close: 3-Payment Plan (20% off)")
+
+4. **Below Floor (offer < 25% of balance)**: REJECTED
+   - Plan type: `below_floor`
+   - Edge: e9 routes to `no_agreement` node
+
+### 25% Floor Rule:
+The 25% floor means the consumer's offer must be at least 25% of the total balance to qualify for ANY plan.
+
+### ABSOLUTE LIMITS (enforced by custom guardrails):
+- **MAX discount**: 24% (NEVER offer 25%, 30%, 40% or higher)
+- **MAX payments**: 3 payments (NEVER offer 4, 5, 6+ installments)
+- **ONLY valid tiers**: 24%/1-pay, 22%/2-pay, 20%/3-pay
+- **NEVER** let consumer offer a discount amount (like "$40 off") - always ask for payment amount
+
+**DO NOT:**
+- Confuse discount percentages with settlement percentages
+- Say "settle for 24%" when you mean "24% discount (pay 76%)"
+- Remove or change these plan type names without updating workflow edges
+- Offer discounts above 24% or payment plans beyond 3 installments
+
+---
+
 ## Workflow Branching from disclosure_identity
 
 The disclosure_identity node has **4 possible exit paths**:

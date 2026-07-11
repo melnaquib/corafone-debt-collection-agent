@@ -23,12 +23,13 @@ export class CollectService {
 
     console.log(`[negotiate_calc] balance=${account_balance}, offer=${consumer_offer}, floor=${floor}, meets_floor=${meets_floor}`);
 
-    // Mock logic:
-    // - If offer >= 100%: accept as full payment (with 24% discount)
-    // - If offer >= 80%: counter with 90% as settlement (with 22% discount)
-    // - If offer >= 50%: counter with 70% split in 2 payments (with 22% discount)
-    // - If offer >= 25%: counter with 60% payment plan (3 months max, no discount)
-    // - If offer < 25%: reject (below floor)
+    // DISCOUNT LOGIC (not settlement percentages!):
+    // 25% floor = minimum per any one payment (floor = 25% of balance)
+    // THRESHOLDS based on consumer's offer (% of original balance):
+    // - Offer >= 100% of balance: 1 payment with 24% DISCOUNT → pay 76% of balance
+    // - Offer >= 50% of balance: 2 payments with 22% DISCOUNT → pay 78% of balance split in 2
+    // - Offer >= 25% of balance (floor): 3 payments with 20% DISCOUNT → pay 80% of balance split in 3
+    // - Offer < 25% floor: reject, ask to increase
 
     let counter_offer: number;
     let plan_type: string;
@@ -38,7 +39,8 @@ export class CollectService {
     let original_amount: number;
 
     if (consumer_offer >= account_balance) {
-      // Full payment - apply 24% discount
+      // Full payment (1 payment) - 24% DISCOUNT → pay 76% of balance
+      // Example: $4000 balance → pay $3040 in 1 payment, save $960
       original_amount = account_balance;
       discount_applied = 0.24;
       counter_offer = Math.round(account_balance * (1 - discount_applied));
@@ -46,22 +48,6 @@ export class CollectService {
       return {
         counter_offer,
         plan_type: 'full_payment',
-        meets_floor: true,
-        discount_percent: discount_applied * 100,
-        original_amount,
-        savings_amount: original_amount - counter_offer,
-      };
-    }
-
-    if (consumer_offer >= account_balance * 0.8) {
-      // Settlement (1 payment) - apply 22% discount
-      original_amount = Math.round(account_balance * 0.9);
-      discount_applied = 0.22;
-      counter_offer = Math.round(original_amount * (1 - discount_applied));
-
-      return {
-        counter_offer,
-        plan_type: 'settlement',
         meets_floor: true,
         installments: 1,
         frequency: 'n_a',
@@ -72,34 +58,42 @@ export class CollectService {
     }
 
     if (consumer_offer >= account_balance * 0.5) {
-      // Downpayment + 1 (2 payments) - apply 22% discount
-      original_amount = Math.round(account_balance * 0.7);
+      // 2-payment plan - 22% DISCOUNT → pay 78% of balance split in 2
+      // Example: $4000 balance → pay $3120 total = $1560 per payment, save $880
+      original_amount = account_balance;
       discount_applied = 0.22;
-      counter_offer = Math.round(original_amount * (1 - discount_applied));
+      const total_discounted = Math.round(account_balance * (1 - discount_applied));
+      counter_offer = Math.round(total_discounted / 2); // Per payment amount
 
       return {
         counter_offer,
-        plan_type: 'downpayment_plus_one',
+        plan_type: 'payment_plan_2',
         meets_floor: true,
         installments: 2,
         frequency: 'monthly',
         discount_percent: discount_applied * 100,
         original_amount,
-        savings_amount: original_amount - counter_offer,
+        savings_amount: original_amount - total_discounted,
       };
     }
 
     if (consumer_offer >= floor) {
-      // Payment plan (3 months MAX) - NO discount
-      counter_offer = Math.round(account_balance * 0.6);
+      // 3-payment plan (MAX) - 20% DISCOUNT → pay 80% of balance split in 3
+      // Example: $4000 balance → pay $3200 total = $1067 per payment, save $800
+      original_amount = account_balance;
+      discount_applied = 0.20;
+      const total_discounted = Math.round(account_balance * (1 - discount_applied));
+      counter_offer = Math.round(total_discounted / 3); // Per payment amount
 
       return {
         counter_offer,
-        plan_type: 'payment_plan',
+        plan_type: 'payment_plan_3',
         meets_floor: true,
-        installments: 3, // Max 3 months enforced
+        installments: 3,
         frequency: 'monthly',
-        discount_percent: 0,
+        discount_percent: discount_applied * 100,
+        original_amount,
+        savings_amount: original_amount - total_discounted,
       };
     }
 
