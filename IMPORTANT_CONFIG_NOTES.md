@@ -121,11 +121,19 @@ The 25% floor means the consumer's offer must be at least 25% of the total balan
 - **ONLY valid tiers**: 24%/1-pay, 22%/2-pay, 20%/3-pay
 - **NEVER** let consumer offer a discount amount (like "$40 off") - always ask for payment amount
 
+### CRITICAL NEGOTIATION RULES:
+- **NEVER disclose discount percentages (20%, 22%, 24%) BEFORE consumer makes their initial offer**
+- **Lead with dollar savings, not percentages** when presenting counter-offers
+- **All settlement offers expire at END OF CALL** - make this crystal clear
+- Emphasize: "This offer is only valid during this call - once we hang up, I cannot guarantee these terms"
+
 **DO NOT:**
 - Confuse discount percentages with settlement percentages
 - Say "settle for 24%" when you mean "24% discount (pay 76%)"
 - Remove or change these plan type names without updating workflow edges
 - Offer discounts above 24% or payment plans beyond 3 installments
+- Reveal specific discount percentages before getting consumer's payment offer
+- Promise settlement terms beyond the current call
 
 ---
 
