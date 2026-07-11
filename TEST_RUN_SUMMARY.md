@@ -1,10 +1,15 @@
 # Test Run Summary
 
 ## Test Suite ID
-`suite_2601kx87swt3e8jbsekys2y718a7`
+`suite_9401kx89zg5yefeva4bmhwh2c4g3`
 
-## Dashboard URL
-https://elevenlabs.io/app/agents/agent-testing/runs/suite_2601kx87swt3e8jbsekys2y718a7
+## ✅ CORRECT Dashboard URLs
+
+**Primary (Recommended):**
+https://elevenlabs.io/app/agents/agents/agent_0901kx61mf5xf8fayvqyn7pgh2tc?tab=tests&branchId=agtbrch_9501kx61mgqcf0wbs2nfhj4b15rg
+
+**Alternate (All Test Runs):**
+https://elevenlabs.io/app/agents/agent-testing/runs
 
 ## Tests Running
 
@@ -37,6 +42,16 @@ https://elevenlabs.io/app/agents/agent-testing/runs/suite_2601kx87swt3e8jbsekys2
   - Should say "that's below the minimum of $1,000"
   - Should NOT ask "do I have your consent to record?" at this point
   - Should NOT pivot to administrative questions
+
+## ⚠️ IMPORTANT: Language Configuration
+
+The CLI couldn't persist the Spanish (es) and Arabic (ar) language settings. You need to add them manually in the dashboard:
+
+1. Go to agent settings
+2. Add language presets for:
+   - **es** (Spanish)
+   - **ar** (Arabic)
+3. Use the same voice for both: `21m00Tcm4TlvDq8ikWAM`
 
 ## Recent Changes Made
 
