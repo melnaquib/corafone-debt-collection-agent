@@ -2,43 +2,86 @@
   "name": "test_25pct_floor_enforced",
   "chat_history": [
     {
-      "role": "user",
+      "role": "agent",
       "time_in_call_secs": 1,
-      "message": "My name is Anna Berg, born 1992-03-20."
+      "message": "Hi, this is Dani from Accord."
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 3,
+      "message": "Hi."
     },
     {
       "role": "agent",
       "time_in_call_secs": 5,
-      "message": "Thanks Anna, identity confirmed. You owe 4000 SEK. What can you pay today?"
+      "message": "This call may be recorded. Is that okay with you? This is an attempt to collect a debt."
     },
     {
       "role": "user",
-      "time_in_call_secs": 10,
-      "message": "I can only pay 200 SEK, that's all I have. Take it or leave it."
+      "time_in_call_secs": 7,
+      "message": "Yes."
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 9,
+      "message": "Thank you. May I have your full name and date of birth?"
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 12,
+      "message": "Anna Berg, born March 20, 1992."
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 15,
+      "message": "Thank you Anna. What are the last 4 digits of your phone number?"
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 17,
+      "message": "8901"
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 20,
+      "message": "Perfect. You have a balance of $4,000. What can you pay today?"
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 23,
+      "message": "I can only pay 200 dollars, that's all I have. Take it or leave it."
     }
   ],
-  "success_condition": "Agent does not immediately accept 200 SEK. Agent either (1) explains this is below the 25% minimum requirement of 1000 SEK, OR (2) offers to check what can be done and indicates they need to calculate options. Agent must NOT say 'Okay, I'll accept 200 SEK' or similar acceptance.",
+  "success_condition": "Agent IMMEDIATELY addresses the 200 dollar offer without pivoting to unrelated questions. Agent must either (1) explain this is below the 25% minimum requirement ($1,000), OR (2) acknowledge the offer and explain the floor requirement. Agent must NOT ignore the offer and ask about recording consent or other administrative questions at this point in the conversation.",
   "success_examples": [
     {
-      "response": "I understand that's what you have available right now. However, the minimum payment we can accept is 25% of the balance, which would be 1000 SEK. Is there any way you could increase your payment to meet that threshold?",
+      "response": "I appreciate you offering $200, but unfortunately that's below the minimum we can accept, which is $1,000 - that's 25% of your balance. Can you do $1,000?",
       "type": "success"
     },
     {
-      "response": "Unfortunately, 200 SEK doesn't meet our minimum payment requirement of 1000 SEK, which is 25% of your balance. Can we discuss other payment options that might work for you?",
+      "response": "I understand that's what you have available. Unfortunately, our minimum payment is 25% of the balance, which is $1,000. Is there any way you could increase to that amount?",
       "type": "success"
     },
     {
-      "response": "Let me check what we can offer with 200 SEK. I'll need to calculate the options for you.",
+      "response": "Unfortunately, $200 doesn't meet our minimum payment requirement of $1,000. Can we discuss other payment options that might work for you?",
       "type": "success"
     }
   ],
   "failure_examples": [
     {
-      "response": "Okay, I'll accept 200 SEK as your payment.",
+      "response": "Okay, I'll accept $200 as your payment.",
       "type": "failure"
     },
     {
-      "response": "Great, let me process your 200 SEK payment.",
+      "response": "Great, let me process your $200 payment.",
+      "type": "failure"
+    },
+    {
+      "response": "Before we go further, I need to confirm — do I have your consent for this call to be recorded?",
+      "type": "failure"
+    },
+    {
+      "response": "I hear you. Before we continue, this call is recorded for quality purposes; do I have your consent?",
       "type": "failure"
     }
   ],

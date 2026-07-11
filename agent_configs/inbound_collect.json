@@ -613,7 +613,7 @@
                     "e2"
                 ],
                 "conversation_config": {},
-                "additional_prompt": "First, confirm the consumer consents to the recorded call. Then verify identity by asking for full name and date of birth. NEVER disclose any balance, amount owed, or account details until both consent and identity are confirmed. If the consumer greets you or makes small talk, respond warmly while guiding toward consent and identity verification. If they ask about their balance or account before identity verification, politely redirect: 'I'd be happy to help with that - I just need to verify your identity first. May I have your full name and date of birth?' If they refuse recording, offer a non-recorded callback and end.",
+                "additional_prompt": "CRITICAL ORDER: (1) First confirm consent to record, (2) THEN verify identity by asking for full name and date of birth. NEVER disclose any balance, amount owed, or account details until BOTH consent and identity are confirmed. If the consumer provides their name/DOB immediately, say 'Thank you' then STILL ask for consent to record before proceeding with verification. If they ask about their balance before identity verification, politely redirect: 'I'd be happy to help with that - I just need to verify your identity first. May I have your full name and date of birth?' If they refuse recording, offer a non-recorded callback and end. IMPORTANT: Maintain the language they speak - if Spanish, stay in Spanish; if Arabic, stay in Arabic.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
                 "label": "Disclosure + Identity",
@@ -630,7 +630,7 @@
                     "e11"
                 ],
                 "conversation_config": {},
-                "additional_prompt": "State the balance owed. Ask what the consumer can pay today. Anchor high: mention full payment as the first, preferred option before any discount. Capture their answer as consumer_offer — do not calculate anything yourself.",
+                "additional_prompt": "State the balance owed. Ask what the consumer can pay today. Anchor high: mention full payment as the first, preferred option before any discount. Capture their answer as consumer_offer — do not calculate anything yourself. LANGUAGE RULE: Continue speaking in the same language the consumer is using (Spanish → Spanish, Arabic → Arabic, English → English). DO NOT switch languages.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
                 "label": "Capture Offer",
@@ -663,7 +663,7 @@
                     "e3c"
                 ],
                 "conversation_config": {},
-                "additional_prompt": "You MUST check the negotiate_calc tool result. Look at the meets_floor field in the response. If meets_floor=false, you MUST NOT accept the payment. Instead, explain that their offer is below the minimum requirement of 25% of the balance. State the specific minimum amount needed (the floor). Ask if they can increase their payment. Do NOT present any counter-offer if meets_floor is false. Only proceed to present_counter if meets_floor is true.",
+                "additional_prompt": "You MUST check the negotiate_calc tool result. Look at the meets_floor field in the response. If meets_floor=false, you MUST respond IMMEDIATELY to address their offer. Say something like: 'I appreciate you offering [their amount], but unfortunately that's below the minimum we can accept, which is [floor amount] - that's 25% of your balance. Can you do [floor amount]?' Ask if they can increase their payment. Do NOT present any counter-offer if meets_floor is false. Do NOT ask about recording consent at this point. Only proceed to present_counter if meets_floor is true. LANGUAGE RULE: Stay in the same language they're speaking.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
                 "label": "Validate Floor",
@@ -797,7 +797,7 @@
                     "e16"
                 ],
                 "conversation_config": {},
-                "additional_prompt": "The consumer could not meet the 25% floor, asked to cease contact, or no resolution was reached. Stay calm and respectful. If cease-and-desist was invoked, confirm compliance and do not negotiate further. Otherwise offer a callback.",
+                "additional_prompt": "The consumer could not meet the 25% floor, asked to cease contact, or no resolution was reached. Stay calm and respectful. If cease-and-desist was invoked, confirm compliance and do not negotiate further. Otherwise offer a callback. LANGUAGE RULE: Continue in the same language they've been speaking throughout the call.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
                 "label": "No Agreement",
