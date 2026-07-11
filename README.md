@@ -24,6 +24,7 @@ AI security; prompt injection, data leakage, ....
 
 Business; addressed using sample knowledgebase in /docs 
 AI Security; for demo, gaurdrails and countermeasures by eleven labs and prompt.
+of course replace ngrok deployment.
 
 ## Tech Choice;
 - Used nestjs mcp to build MCP server for tools.

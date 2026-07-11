@@ -17,7 +17,71 @@ and intelligent negotiation capabilities. Let me show you the key features."
 ----------------------------
 "First, compliance. The agent has three critical safeguards:
 
-1. Identity Gate - The agent NEVER discloses account balance or debt
+1. Identity Gate - The agent NEVER dis# Accord — Debt Settlement Voice Agent
+
+Inbound calls voice agent that handles debtor calls and negotiates a payment plan, trying to maximize what the customer pays. The agent uses external systems to handle id verification and calculating offers
+
+## Tech Choice;
+- Used nestjs mcp to build MCP server for tools.
+- Used Eleven Labs - first plan was to use it just for TTS, because it's the best in auto lang detect, regulation compliance. Then I used its agent platform to develop the whole agent.
+- Agent deployed to shared link on eleven labs.
+- This repo can be used to recreate the agent using Eleven Labs CLI - mostly.
+elevenlabs agents push
+elevenlabs tools push
+elevenlabs tests push
+- one down side I found it harder to manage prompts, plan for future work to use procedure to faciliate prompt versioning and monitoring, and collaboration with team members.
+
+## Flow
+
+1. **Greeting** - Agent introduces itself, gives mini-Miranda, asks for consent to record
+2. **Identity Verification** - Asks for name/DOB, security question, validates identity
+   - If **verification fails** or **minor detected** (under 18) → politely end call
+3. **Get Balance** - Pull account balance after identity confirmed
+4. **Capture Offer** - Ask what they can pay today (anchor high for full payment)
+5. **Calculate** - Call `negotiate_calc` tool with their offer
+6. **Validate Floor** - Check if offer meets 25% minimum
+   - **Below floor** → ask them to increase OR route to no_agreement if they refuse
+   - **Meets floor** → present counter-offer with discount (24% full payment, 22% settlement, 0% plans)
+7. **Close or Continue** - Either close the deal, negotiate further, or route to no_agreement
+8. **Send Outcome** - Report final result (agreement, escalation, no decision)
+
+**Discounts:** 24% off for full payment, 22% for settlements, 0% for payment plans (max 3 months). Accounts for ~3.5% interest and lower risk with faster payment.
+
+## Outcomes
+1. `agreement_reached` — plan type, total, # payments, frequency
+2. `escalation_required` — best offer below 25% floor, or customer declined everything
+3. `no_decision` — no clear yes/no (wants to think it over, call dropped, etc.)
+
+## Tools
+
+# MCP Server
+I used mcp server to make offers and recieve calls outome
+also I used external tools for id challenge and verifation
+**For Tests Only** run local using ngrok to expose a public address endpoint
+https://stretch-equation-ultimate.ngrok-free.dev/mcp
+
+## Dynamic variables
+
+CompanyName: Accord
+HumanAgentName: Dani
+
+## TEST DATA
+John Smith
+June 15, 1985
+last 4digits 5234
+balance 3500
+
+### Includes Eleven Labs test
+
+## Future work
+
+- Use Eleven labs Procedures, to better manage steps and prompts
+- add more negotation skills
+- add more guardrails and tests for regulations
+- Persist negotiation state per call so a dropped call can resume instead of restarting
+- add side notes on call for offer tools, like customer cooperation etc.
+- use tools like garak to assess system security
+closes account balance or debt
    information until the caller's identity is verified with name and
    date of birth.
 
