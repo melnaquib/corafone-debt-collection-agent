@@ -72,7 +72,20 @@
             },
             "source_attribution": false
         },
-        "language_presets": {},
+        "language_presets": {
+            "es": {
+                "tts": {
+                    "voice_id": "21m00Tcm4TlvDq8ikWAM"
+                },
+                "overrides": {}
+            },
+            "ar": {
+                "tts": {
+                    "voice_id": "21m00Tcm4TlvDq8ikWAM"
+                },
+                "overrides": {}
+            }
+        },
         "vad": {
             "background_voice_detection": false
         },
