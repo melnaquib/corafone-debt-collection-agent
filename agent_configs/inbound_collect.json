@@ -104,12 +104,15 @@
             "language": "en",
             "hinglish_mode": false,
             "dynamic_variables": {
-                "dynamic_variable_placeholders": {}
+                "dynamic_variable_placeholders": {
+                    "AgentHumanName": "",
+                    "CompanyName": ""
+                }
             },
             "disable_first_message_interruptions": false,
             "max_conversation_duration_message": "I need to wrap up — let's lock in the plan we discussed now, or I can have someone call you back.",
             "prompt": {
-                "prompt": "You are Dani, a calm professional debt negotiator for Accord.\n\nIdentity Verification (CRITICAL - MUST FOLLOW):\n1. After consent, collect full name and date of birth\n2. Call id_challenge tool with that information\n3. Ask the consumer the security question returned by the tool\n4. Call id_approve tool with the challenge_id and their answer\n5. ONLY if verified=true: Call get_debt_details with consumer_id to get account balance\n6. NEVER disclose any balance or debt information before successful verification\n7. If verification fails, do NOT proceed with debt discussion\n\nLanguage Rule: If the consumer speaks in Spanish, Arabic, or any other language, IMMEDIATELY switch to that language and STAY in that language for the ENTIRE conversation. NEVER revert to English unless the consumer explicitly switches back. You are fluent in English, Spanish (Español), and Arabic (العربية).\n\nCease-and-Desist Compliance: If the consumer says 'cease and desist', 'stop calling', 'do not contact me', or any similar request to stop contact (in ANY language), immediately:\n1. Stop all negotiation discussion\n2. Politely acknowledge their request\n3. Confirm you will comply\n4. State clearly this does NOT erase the debt\n5. End the call WITHOUT any further payment discussion\n\nGlobal rules that always apply:\n- Never say a payment erases or resets the debt\n- Never imply legal action beyond what's true\n- One idea per turn\n- Always use negotiate_calc tool before presenting counter-offers\n- NEVER discuss account balance before calling get_debt_details",
+                "prompt": "You are {{AgentHumanName}}, a calm professional debt negotiator for {{CompanyName}}.\n\nIdentity Verification (CRITICAL - MUST FOLLOW):\n1. After consent, collect full name and date of birth\n2. Call id_challenge tool with that information\n3. Ask the consumer the security question returned by the tool\n4. Call id_approve tool with the challenge_id and their answer\n5. ONLY if verified=true: Call get_debt_details with consumer_id to get account balance\n6. NEVER disclose any balance or debt information before successful verification\n7. If verification fails, do NOT proceed with debt discussion\n\nLanguage Rule: If the consumer speaks in Spanish, Arabic, or any other language, IMMEDIATELY switch to that language and STAY in that language for the ENTIRE conversation. NEVER revert to English unless the consumer explicitly switches back. You are fluent in English, Spanish (Español), and Arabic (العربية).\n\nCease-and-Desist Compliance: If the consumer says 'cease and desist', 'stop calling', 'do not contact me', or any similar request to stop contact (in ANY language), immediately:\n1. Stop all negotiation discussion\n2. Politely acknowledge their request\n3. Confirm you will comply\n4. State clearly this does NOT erase the debt\n5. End the call WITHOUT any further payment discussion\n\nGlobal rules that always apply:\n- Never say a payment erases or resets the debt\n- Never imply legal action beyond what's true\n- One idea per turn\n- Always use negotiate_calc tool before presenting counter-offers\n- NEVER discuss account balance before calling get_debt_details",
                 "llm": "claude-opus-4-7",
                 "opener": null,
                 "enable_reasoning_summary": false,
@@ -483,6 +486,22 @@
                     "condition": "consumer explicitly refuses consent to record (says no/refuses) OR consumer explicitly refuses to provide name and date of birth for identity verification"
                 }
             },
+            "e_verify_fail": {
+                "source": "disclosure_identity",
+                "target": "identity_verification_failed",
+                "forward_condition": {
+                    "type": "llm",
+                    "condition": "id_approve tool was called and returned verified=false, meaning the consumer failed identity verification"
+                }
+            },
+            "e_minor": {
+                "source": "disclosure_identity",
+                "target": "minor_detected",
+                "forward_condition": {
+                    "type": "llm",
+                    "condition": "consumer's date of birth indicates they are under 18 years old (a minor)"
+                }
+            },
             "e3": {
                 "source": "capture_offer",
                 "target": "calc_negotiation",
@@ -611,6 +630,20 @@
                 "forward_condition": {
                     "type": "unconditional"
                 }
+            },
+            "e_verify_fail_to_end": {
+                "source": "identity_verification_failed",
+                "target": "end_node",
+                "forward_condition": {
+                    "type": "unconditional"
+                }
+            },
+            "e_minor_to_end": {
+                "source": "minor_detected",
+                "target": "end_node",
+                "forward_condition": {
+                    "type": "unconditional"
+                }
             }
         },
         "nodes": {
@@ -632,9 +665,14 @@
                 },
                 "edge_order": [
                     "e1",
+                    "e_verify_fail",
+                    "e_minor",
                     "e2"
                 ],
                 "conversation_config": {
+                    "turn": {},
+                    "tts": {},
+                    "conversation": {},
                     "agent": {
                         "prompt": {
                             "built_in_tools": {}
@@ -702,6 +740,9 @@
                     "e3c"
                 ],
                 "conversation_config": {
+                    "turn": {},
+                    "tts": {},
+                    "conversation": {},
                     "agent": {
                         "prompt": {
                             "built_in_tools": {}
@@ -747,6 +788,9 @@
                     "e4a"
                 ],
                 "conversation_config": {
+                    "turn": {},
+                    "tts": {},
+                    "conversation": {},
                     "agent": {
                         "prompt": {
                             "built_in_tools": {}
@@ -913,6 +957,50 @@
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
                 "label": "Send Outcome",
+                "entry_behavior": "auto"
+            },
+            "identity_verification_failed": {
+                "type": "override_agent",
+                "position": {
+                    "x": -300,
+                    "y": 600
+                },
+                "edge_order": [
+                    "e_verify_fail_to_end"
+                ],
+                "conversation_config": {
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
+                "additional_prompt": "Identity verification failed. Politely inform the consumer: 'I'm sorry, I wasn't able to verify your identity. For security reasons, I cannot discuss account details without proper verification. You can call us back at [phone number] to try again, or visit our website. Have a good day.' Then end the call. LANGUAGE RULE: Maintain the language they're speaking.",
+                "additional_knowledge_base": [],
+                "additional_tool_ids": [],
+                "label": "ID Verification Failed",
+                "entry_behavior": "auto"
+            },
+            "minor_detected": {
+                "type": "override_agent",
+                "position": {
+                    "x": 300,
+                    "y": 600
+                },
+                "edge_order": [
+                    "e_minor_to_end"
+                ],
+                "conversation_config": {
+                    "agent": {
+                        "prompt": {
+                            "built_in_tools": {}
+                        }
+                    }
+                },
+                "additional_prompt": "The consumer is under 18 years old (a minor). Politely inform them: 'I appreciate your call, but I'm not able to discuss this account with anyone under 18. Please have a parent or legal guardian call us at [phone number]. Thank you.' Then end the call. LANGUAGE RULE: Maintain the language they're speaking.",
+                "additional_knowledge_base": [],
+                "additional_tool_ids": [],
+                "label": "Minor Detected",
                 "entry_behavior": "auto"
             },
             "end_node": {
