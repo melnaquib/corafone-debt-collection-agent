@@ -681,7 +681,7 @@
                     "e12"
                 ],
                 "conversation_config": {},
-                "additional_prompt": "State the counter-offer returned by the tool as your number, not one you invented. If they push back, either hold firm (restate the value of settling now, calmly, don't repeat the same line twice) or offer a creative trade (e.g. biweekly instead of monthly, or a different due date) for a higher amount, before ever discounting further. If they go quiet after you state the number, wait — do not fill silence by lowering it yourself.",
+                "additional_prompt": "State the counter-offer returned by the tool as your number, not one you invented. IMPORTANT: If negotiate_calc returned discount_percent and savings_amount, mention the value: 'If you can pay [counter_offer] today, you'll save [savings_amount] - that's [discount_percent]% off!' If they push back, either hold firm (restate the value of settling now and the discount savings, calmly, don't repeat the same line twice) or offer a creative trade (e.g. biweekly instead of monthly, or a different due date) for a higher amount, before ever discounting further. If they go quiet after you state the number, wait — do not fill silence by lowering it yourself.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
                 "label": "Present Counter-Offer",
@@ -749,7 +749,7 @@
                     "e13"
                 ],
                 "conversation_config": {},
-                "additional_prompt": "Confirm full payment or highest downpayment plus one more payment. Restate amount, date(s), payment method. Provide a confirmation reference.",
+                "additional_prompt": "Confirm full payment or highest downpayment plus one more payment. IMPORTANT: Check the negotiate_calc response for discount_percent and savings_amount fields. If present, mention the savings: 'By paying in full today, you're saving [savings_amount] - that's a [discount_percent]% discount!' Restate the final amount after discount, payment date(s), and payment method. Provide a confirmation reference. Create urgency by emphasizing this is a limited-time settlement offer.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
                 "label": "Close: Full / Downpayment+1",
@@ -765,7 +765,7 @@
                     "e14"
                 ],
                 "conversation_config": {},
-                "additional_prompt": "Confirm settlement terms: up to 20% off, max 3 payments. Read back the schedule and get an explicit logged verbal consent statement from the consumer before finishing.",
+                "additional_prompt": "Confirm settlement terms: maximum 3 payments. IMPORTANT: Check the negotiate_calc response for discount_percent and savings_amount. If present, emphasize the savings: 'This settlement saves you [savings_amount] - that's [discount_percent]% off the original amount!' Read back the full payment schedule with dates and amounts. Get an explicit logged verbal consent statement from the consumer confirming they agree to the settlement terms before finishing.",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
                 "label": "Close: Settlement",
@@ -781,7 +781,7 @@
                     "e15"
                 ],
                 "conversation_config": {},
-                "additional_prompt": "Confirm payment plan: no discount, max 3 months, weekly/biweekly/monthly. Smallest payment must be at least 25% of balance. Read back the full schedule.",
+                "additional_prompt": "Confirm payment plan: MAXIMUM 3 months only, weekly/biweekly/monthly frequency options. No discount applies to payment plans (payment plans pay full balance). Smallest payment must be at least 25% of balance. Read back the full payment schedule with specific dates and amounts for each payment. Optionally mention: 'If you're able to pay in full instead, you could save up to 24% - but this payment plan works too if you need it.'",
                 "additional_knowledge_base": [],
                 "additional_tool_ids": [],
                 "label": "Close: Payment Plan",

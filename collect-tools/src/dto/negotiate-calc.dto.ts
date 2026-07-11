@@ -26,4 +26,13 @@ export class NegotiateCalcResponseDto {
 
   @ApiProperty({ description: 'Payment frequency', example: 'monthly', required: false })
   frequency?: string;
+
+  @ApiProperty({ description: 'Discount percentage applied (0-24)', example: 24, required: false })
+  discount_percent?: number;
+
+  @ApiProperty({ description: 'Original amount before discount', example: 3500, required: false })
+  original_amount?: number;
+
+  @ApiProperty({ description: 'Total savings from discount', example: 840, required: false })
+  savings_amount?: number;
 }

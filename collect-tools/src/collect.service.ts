@@ -8,6 +8,11 @@ export class CollectService {
   /**
    * Calculate counter-offer based on consumer's offer and account balance
    * Mock implementation - replace with actual business logic
+   *
+   * Discount structure (applied BEFORE floor check):
+   * - Full payment (1 payment): 24% discount
+   * - Settlement (2-3 payments): 22% discount
+   * - Payment plan (3 months max): No discount
    */
   calculateNegotiation(dto: NegotiateCalcDto): NegotiateCalcResponseDto {
     const { account_balance, consumer_offer, attempt_no } = dto;
@@ -19,47 +24,82 @@ export class CollectService {
     console.log(`[negotiate_calc] balance=${account_balance}, offer=${consumer_offer}, floor=${floor}, meets_floor=${meets_floor}`);
 
     // Mock logic:
-    // - If offer >= 100%: accept as full payment
-    // - If offer >= 80%: counter with 90% as settlement
-    // - If offer >= 50%: counter with 70% split in 2 payments
-    // - If offer >= 25%: counter with 60% payment plan (3 months)
+    // - If offer >= 100%: accept as full payment (with 24% discount)
+    // - If offer >= 80%: counter with 90% as settlement (with 22% discount)
+    // - If offer >= 50%: counter with 70% split in 2 payments (with 22% discount)
+    // - If offer >= 25%: counter with 60% payment plan (3 months max, no discount)
     // - If offer < 25%: reject (below floor)
 
+    let counter_offer: number;
+    let plan_type: string;
+    let installments: number;
+    let frequency: string;
+    let discount_applied = 0;
+    let original_amount: number;
+
     if (consumer_offer >= account_balance) {
+      // Full payment - apply 24% discount
+      original_amount = account_balance;
+      discount_applied = 0.24;
+      counter_offer = Math.round(account_balance * (1 - discount_applied));
+
       return {
-        counter_offer: account_balance,
+        counter_offer,
         plan_type: 'full_payment',
         meets_floor: true,
+        discount_percent: discount_applied * 100,
+        original_amount,
+        savings_amount: original_amount - counter_offer,
       };
     }
 
     if (consumer_offer >= account_balance * 0.8) {
+      // Settlement (1 payment) - apply 22% discount
+      original_amount = Math.round(account_balance * 0.9);
+      discount_applied = 0.22;
+      counter_offer = Math.round(original_amount * (1 - discount_applied));
+
       return {
-        counter_offer: Math.round(account_balance * 0.9),
+        counter_offer,
         plan_type: 'settlement',
         meets_floor: true,
         installments: 1,
         frequency: 'n_a',
+        discount_percent: discount_applied * 100,
+        original_amount,
+        savings_amount: original_amount - counter_offer,
       };
     }
 
     if (consumer_offer >= account_balance * 0.5) {
+      // Downpayment + 1 (2 payments) - apply 22% discount
+      original_amount = Math.round(account_balance * 0.7);
+      discount_applied = 0.22;
+      counter_offer = Math.round(original_amount * (1 - discount_applied));
+
       return {
-        counter_offer: Math.round(account_balance * 0.7),
+        counter_offer,
         plan_type: 'downpayment_plus_one',
         meets_floor: true,
         installments: 2,
         frequency: 'monthly',
+        discount_percent: discount_applied * 100,
+        original_amount,
+        savings_amount: original_amount - counter_offer,
       };
     }
 
     if (consumer_offer >= floor) {
+      // Payment plan (3 months MAX) - NO discount
+      counter_offer = Math.round(account_balance * 0.6);
+
       return {
-        counter_offer: Math.round(account_balance * 0.6),
+        counter_offer,
         plan_type: 'payment_plan',
         meets_floor: true,
-        installments: 3,
+        installments: 3, // Max 3 months enforced
         frequency: 'monthly',
+        discount_percent: 0,
       };
     }
 
@@ -70,6 +110,7 @@ export class CollectService {
       meets_floor: false,
       installments: 1,
       frequency: 'n_a',
+      discount_percent: 0,
     };
   }
 
