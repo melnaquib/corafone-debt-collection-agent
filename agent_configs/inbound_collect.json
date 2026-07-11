@@ -478,7 +478,7 @@
                 "target": "no_agreement",
                 "forward_condition": {
                     "type": "llm",
-                    "condition": "consumer refuses recording or cannot verify identity"
+                    "condition": "consumer explicitly refuses consent to record (says no/refuses) OR consumer explicitly refuses to provide name and date of birth for identity verification"
                 }
             },
             "e3": {
@@ -582,22 +582,6 @@
                     "condition": "plan_type is below_floor or meets_floor is false"
                 }
             },
-            "e11": {
-                "source": "capture_offer",
-                "target": "no_agreement",
-                "forward_condition": {
-                    "type": "llm",
-                    "condition": "consumer says cease and desist / stop calling"
-                }
-            },
-            "e12": {
-                "source": "present_counter",
-                "target": "no_agreement",
-                "forward_condition": {
-                    "type": "llm",
-                    "condition": "consumer says cease and desist / stop calling"
-                }
-            },
             "e13": {
                 "source": "close_full_payment",
                 "target": "send_outcome_node",
@@ -668,8 +652,7 @@
                     "y": 600
                 },
                 "edge_order": [
-                    "e3",
-                    "e11"
+                    "e3"
                 ],
                 "conversation_config": {
                     "agent": {
@@ -737,8 +720,7 @@
                 },
                 "edge_order": [
                     "e4",
-                    "e5",
-                    "e12"
+                    "e5"
                 ],
                 "conversation_config": {
                     "agent": {

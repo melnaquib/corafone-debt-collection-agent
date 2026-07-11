@@ -16,6 +16,14 @@
         {
             "response": "Hi there! I'm here to assist you.",
             "type": "success"
+        },
+        {
+            "response": "Hi, this is Dani from Accord. This call may be recorded for quality assurance. Do I have your consent to proceed?",
+            "type": "success"
+        },
+        {
+            "response": "Hi, this is Dani with Accord. This call may be monitored or recorded. Is that okay with you?",
+            "type": "success"
         }
     ],
     "failure_examples": [
