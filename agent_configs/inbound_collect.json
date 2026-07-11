@@ -615,11 +615,7 @@
                 "conversation_config": {},
                 "additional_prompt": "First, confirm the consumer consents to the recorded call. Then verify identity by asking for full name and date of birth. NEVER disclose any balance, amount owed, or account details until both consent and identity are confirmed. If the consumer greets you or makes small talk, respond warmly while guiding toward consent and identity verification. If they ask about their balance or account before identity verification, politely redirect: 'I'd be happy to help with that - I just need to verify your identity first. May I have your full name and date of birth?' If they refuse recording, offer a non-recorded callback and end.",
                 "additional_knowledge_base": [],
-                "additional_tool_ids": [
-                    "tool_5001kx6t1zgvfskr1b3bxavstrcw",
-                    "tool_9701kx6t74xhfjrvzwgm1c3qx94p",
-                    "tool_1201kx6tbsycfpbthxp0tjx7179q"
-                ],
+                "additional_tool_ids": [],
                 "label": "Disclosure + Identity",
                 "entry_behavior": "wait_for_user"
             },
@@ -652,9 +648,7 @@
                 "conversation_config": {},
                 "additional_prompt": "You MUST call the negotiate_calc tool now with the consumer's offered amount. Wait for the tool response - it will return a counter_offer, plan_type, and meets_floor. Do NOT say anything to the consumer yet - just call the tool and wait. Do NOT invent payment amounts yourself.",
                 "additional_knowledge_base": [],
-                "additional_tool_ids": [
-                    "tool_4401kx63h1wefdpbkdw4c8hx8ms8"
-                ],
+                "additional_tool_ids": [],
                 "label": "Calculate Counter-Offer (Round 1)",
                 "entry_behavior": "auto"
             },
@@ -705,9 +699,7 @@
                 "conversation_config": {},
                 "additional_prompt": "Call the negotiate_calc tool again to calculate a second counter-offer. Wait for the result.",
                 "additional_knowledge_base": [],
-                "additional_tool_ids": [
-                    "tool_4401kx63h1wefdpbkdw4c8hx8ms8"
-                ],
+                "additional_tool_ids": [],
                 "label": "Calculate Counter-Offer (Round 2)",
                 "entry_behavior": "auto"
             },
@@ -821,9 +813,7 @@
                 "conversation_config": {},
                 "additional_prompt": "Call the send_outcome tool to report the final call outcome.",
                 "additional_knowledge_base": [],
-                "additional_tool_ids": [
-                    "tool_1301kx64yft7fcca1bms595t8xte"
-                ],
+                "additional_tool_ids": [],
                 "label": "Send Outcome",
                 "entry_behavior": "auto"
             },
