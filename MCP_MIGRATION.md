@@ -59,6 +59,7 @@ All individual webhook tools have been removed:
 - `tool_ids`: [] (empty - no individual tools)
 - `tools`: [] (empty - no webhook definitions)
 - `mcp_server_ids`: [] (ready for MCP server ID)
+- All workflow nodes updated to remove hardcoded tool IDs from `additional_tool_ids` arrays
 
 ## ⏳ Pending Steps
 
