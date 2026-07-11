@@ -82,3 +82,36 @@ Agent: "I'd be happy to help - I just need to verify your identity first. May I 
 ```
 
 **DO NOT change this order** - it's a compliance requirement.
+
+---
+
+## Workflow Branching from disclosure_identity
+
+The disclosure_identity node has **4 possible exit paths**:
+
+### 1. Success Path (e1)
+**Condition:** Identity verified (id_approve returns verified=true) AND consumer consents to continue
+**Routes to:** `capture_offer` node
+**Purpose:** Normal flow - proceed with debt collection
+
+### 2. Identity Verification Failed (e_verify_fail)
+**Condition:** id_approve tool was called and returned verified=false
+**Routes to:** `identity_verification_failed` node → `end_node`
+**Purpose:** FDCPA compliance - cannot discuss debt without proper ID verification
+**Agent says:** "I'm sorry, I wasn't able to verify your identity. For security reasons, I cannot discuss account details without proper verification. You can call us back at [phone number] to try again, or visit our website. Have a good day."
+
+### 3. Minor Detected (e_minor)
+**Condition:** Consumer's date of birth indicates they are under 18 years old
+**Routes to:** `minor_detected` node → `end_node`
+**Purpose:** FDCPA compliance - cannot discuss debt with minors
+**Agent says:** "I appreciate your call, but I'm not able to discuss this account with anyone under 18. Please have a parent or legal guardian call us at [phone number]. Thank you."
+
+### 4. Consumer Refusal (e2)
+**Condition:** Consumer explicitly refuses consent to record OR explicitly refuses to provide name/DOB
+**Routes to:** `no_agreement` node → `send_outcome_node`
+**Purpose:** Consumer does not want to continue
+
+**DO NOT:**
+- Remove these workflow edges
+- Change the order (check success first, then verification failures, then refusal)
+- Remove minor detection or ID verification failure branches
