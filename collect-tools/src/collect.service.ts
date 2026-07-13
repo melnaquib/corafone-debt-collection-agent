@@ -76,17 +76,27 @@ export class CollectService {
     }
 
     // DISCOUNT LOGIC (not settlement percentages!):
-    // 25% floor = minimum per installment (each payment must be at least 25% of balance)
-    // THRESHOLDS based on consumer's offer (% of original balance):
-    // - Offer >= 25% of balance: 1 payment with 24% DISCOUNT → pay 76% (NO BONUS - already at 24% max)
-    // - Offer >= 50% of balance: 2 payments with 22% DISCOUNT (24% if verified) → pay 78% (76% verified) split in 2
-    //   (ensures each payment >= 25% of balance: 50% / 2 = 25% per payment minimum)
-    // - Offer >= 75% of balance: 3-payment plan (20% DISCOUNT, 22% verified) ONLY if funds verified
-    //   (ensures each payment >= 25% of balance: 75% / 3 = 25% per payment minimum)
-    // - Offer < 25% floor: reject, ask to increase
+    // consumer_offer = DOWN PAYMENT (initial payment consumer will make TODAY)
+    // 25% floor = minimum down payment
+    //
+    // THRESHOLDS based on DOWN PAYMENT (% of original balance):
+    // - Down payment >= 76% of balance: 1 payment, 24% DISCOUNT → Total 76% of balance (NO BONUS - at max)
+    //   Example: $5k balance, $3,800 down → Pay $3,800 total (24% off)
+    //
+    // - Down payment >= 50% of balance: 2 payments, 22% DISCOUNT (24% if verified) → Total 78% (76% verified)
+    //   Example: $5k balance, $3,000 down → Pay [$3,000 down, $900 later] = $3,900 total (22% off)
+    //
+    // - Down payment >= 25% of balance: 3 payments, 20% DISCOUNT (22% if verified) → Total 80% (78% verified)
+    //   Example: $5k balance, $2,000 down → Pay [$2,000 down, $1,000, $1,000] = $4,000 total (20% off)
+    //
+    // - Down payment < 25% floor: reject, ask to increase
+    //
+    // PAYMENT STRUCTURE:
+    // - 1st payment = consumer_offer (down payment)
+    // - Remaining payments = (total_settlement - down_payment) / (remaining_installments)
     //
     // VERIFICATION BONUS: +2% extra discount if funds_verification_status = "yes" (CAPPED at 24% maximum)
-    // GUARDRAIL: NEVER exceed 24% discount, NEVER exceed 3 payments, each payment >= 25% of balance
+    // GUARDRAIL: NEVER exceed 24% discount, NEVER exceed 3 payments
 
     let counter_offer: number;
     let plan_type: string;
@@ -96,15 +106,16 @@ export class CollectService {
     let discount_applied = 0;
     let original_amount: number;
 
-    // Calculate thresholds based on 25% floor per installment
-    const threshold_3_payment = Math.round(account_balance * 0.75); // 3 × 25% = 75%
-    const threshold_2_payment = Math.round(account_balance * 0.5);  // 2 × 25% = 50%
-    const threshold_1_payment = Math.round(account_balance * 0.25); // 1 × 25% = 25%
+    // Calculate thresholds based on DOWN PAYMENT amount
+    const threshold_full_payment = Math.round(account_balance * 0.76); // 76% down → full payment
+    const threshold_2_payment = Math.round(account_balance * 0.5);     // 50% down → 2 payments
+    const threshold_3_payment = Math.round(account_balance * 0.25);    // 25% down → 3 payments
 
-    if (consumer_offer >= account_balance) {
-      // Full payment (1 payment) - 24% DISCOUNT → pay 76% of balance
+    // Full payment tier: down payment >= 76% of balance
+    if (consumer_offer >= threshold_full_payment) {
+      // 24% DISCOUNT → pay 76% of balance in ONE payment
       // NO VERIFICATION BONUS - already at 24% maximum (guardrail enforcement)
-      // Example: $4000 balance, offer $4000 → pay $3040 (same whether verified or not)
+      // Example: $5000 balance, $3800 down → Pay $3800 total (24% off)
       original_amount = account_balance;
       base_discount = this.MAX_DISCOUNT_PERCENT; // Already at maximum
 
@@ -113,7 +124,10 @@ export class CollectService {
         funds_verification_status === 'yes'
       );
 
-      counter_offer = Math.round(account_balance * (1 - discount_applied));
+      const total_settlement = Math.round(account_balance * (1 - discount_applied));
+
+      // Down payment covers entire settlement (should equal or exceed total)
+      counter_offer = total_settlement; // This is what they need to pay total
 
       return {
         counter_offer,
@@ -123,17 +137,17 @@ export class CollectService {
         frequency: 'n_a',
         discount_percent: discount_applied * 100,
         original_amount,
-        savings_amount: original_amount - counter_offer,
+        savings_amount: original_amount - total_settlement,
         funds_verification_status,
         funds_verified: funds_verification_status === 'yes',
         verification_bonus_applied: bonusApplied,
       };
     }
 
-    // 2-payment plan - 22% DISCOUNT → pay 78% of balance split in 2
-    // BONUS: 24% if funds verified → pay 76% of balance split in 2 (capped at 24% max)
-    // Example: $4000 balance → $1560/payment standard, $1520/payment with verification
-    const twoPaymentPlan = () => {
+    // 2-payment plan: down payment >= 50% of balance
+    // 22% DISCOUNT → pay 78% of balance (24% if verified)
+    // Example: $5000 balance, $3000 down → Pay [$3000 down, $900 later] = $3900 total (22% off)
+    if (consumer_offer >= threshold_2_payment) {
       original_amount = account_balance;
       base_discount = 0.22;
 
@@ -141,8 +155,12 @@ export class CollectService {
       const { discount: discount_applied, bonusApplied: verification_bonus_applied } =
         this.applyVerificationBonus(base_discount, funds_verification_status === 'yes');
 
-      const total_discounted = Math.round(account_balance * (1 - discount_applied));
-      counter_offer = Math.round(total_discounted / 2); // Per payment amount
+      const total_settlement = Math.round(account_balance * (1 - discount_applied));
+
+      // 1st payment = down payment (consumer_offer)
+      // 2nd payment = remaining balance
+      const remaining_balance = total_settlement - consumer_offer;
+      counter_offer = remaining_balance; // Amount due for 2nd payment
 
       return {
         counter_offer,
@@ -152,20 +170,17 @@ export class CollectService {
         frequency: 'monthly',
         discount_percent: discount_applied * 100,
         original_amount,
-        savings_amount: original_amount - total_discounted,
+        savings_amount: original_amount - total_settlement,
         funds_verification_status,
         funds_verified: funds_verification_status === 'yes',
         verification_bonus_applied,
       };
-    };
+    }
 
-    // Check 3-payment plan BEFORE 2-payment plan (higher threshold takes priority)
-    // 3-payment plan requires offer >= 75% of balance (3 × 25% floor per installment)
-    // ONLY offered once funds are verified as sufficient
-    if (consumer_offer >= threshold_3_payment && funds_verification_status === 'yes') {
-      // 20% DISCOUNT → pay 80% of balance split in 3
-      // BONUS: 22% if funds verified → pay 78% of balance split in 3 (capped at 24% max)
-      // Example: $4000 balance, offer $3000 → pay $3120 total = $1040/payment
+    // 3-payment plan: down payment >= 25% of balance
+    // 20% DISCOUNT → pay 80% of balance (22% if verified)
+    // Example: $5000 balance, $2000 down → Pay [$2000 down, $1000, $1000] = $4000 total (20% off)
+    if (consumer_offer >= threshold_3_payment) {
       original_amount = account_balance;
       base_discount = 0.20;
 
@@ -173,8 +188,12 @@ export class CollectService {
       const { discount: discount_applied, bonusApplied: verification_bonus_applied } =
         this.applyVerificationBonus(base_discount, funds_verification_status === 'yes');
 
-      const total_discounted = Math.round(account_balance * (1 - discount_applied));
-      counter_offer = Math.round(total_discounted / 3); // Per payment amount
+      const total_settlement = Math.round(account_balance * (1 - discount_applied));
+
+      // 1st payment = down payment (consumer_offer)
+      // 2nd and 3rd payments = split remaining balance equally
+      const remaining_balance = total_settlement - consumer_offer;
+      counter_offer = Math.round(remaining_balance / 2); // Amount per remaining payment
 
       // GUARDRAIL: Enforce max installments
       if (3 > this.MAX_INSTALLMENTS) {
@@ -189,37 +208,17 @@ export class CollectService {
         frequency: 'monthly',
         discount_percent: discount_applied * 100,
         original_amount,
-        savings_amount: original_amount - total_discounted,
+        savings_amount: original_amount - total_settlement,
         funds_verification_status,
-        funds_verified: true,
+        funds_verified: funds_verification_status === 'yes',
         verification_bonus_applied,
       };
     }
 
-    // 2-payment plan for offers >= 50% (2 × 25% floor)
-    if (consumer_offer >= threshold_2_payment) {
-      return twoPaymentPlan();
-    }
-
-    // Offers between 25% and 50% don't meet minimum for any multi-payment plan
-    // Ask consumer to increase their offer
-    if (consumer_offer >= threshold_1_payment) {
-      return {
-        counter_offer: threshold_2_payment,
-        plan_type: 'below_minimum_for_plan',
-        meets_floor: false,
-        installments: 1,
-        frequency: 'n_a',
-        discount_percent: 0,
-        funds_verification_status,
-        funds_verified: false,
-        verification_bonus_applied: false,
-      };
-    }
-
     // Below 25% floor - way too low, reject
+    // Example: $5000 balance, $1000 down (20%) → Rejected, ask for at least $1250 (25%)
     return {
-      counter_offer: threshold_1_payment,
+      counter_offer: threshold_3_payment,
       plan_type: 'below_floor',
       meets_floor: false,
       installments: 1,

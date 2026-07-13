@@ -4,7 +4,7 @@ export class NegotiateCalcDto {
   @ApiProperty({ description: 'Total account balance owed', example: 4000 })
   account_balance: number;
 
-  @ApiProperty({ description: 'Amount consumer offered to pay', example: 3000 })
+  @ApiProperty({ description: 'DOWN PAYMENT amount consumer can pay TODAY (not total settlement)', example: 3000 })
   consumer_offer: number;
 
   @ApiProperty({ description: 'Negotiation attempt number (1 or 2)', example: 1 })
@@ -23,22 +23,25 @@ export class NegotiateCalcDto {
 }
 
 export class NegotiateCalcResponseDto {
-  @ApiProperty({ description: 'Calculated counter-offer amount', example: 2800 })
+  @ApiProperty({
+    description: 'NEXT payment amount due (for multi-payment plans, this is payment 2/3 amount; for full payment, this is total). IMPORTANT: Down payment (1st payment) = consumer_offer from request.',
+    example: 900
+  })
   counter_offer: number;
 
-  @ApiProperty({ description: 'Type of payment plan', example: 'payment_plan' })
+  @ApiProperty({ description: 'Type of payment plan: full_payment, payment_plan_2, payment_plan_3, below_floor', example: 'payment_plan_2' })
   plan_type: string;
 
-  @ApiProperty({ description: 'Whether offer meets 25% floor requirement', example: true })
+  @ApiProperty({ description: 'Whether down payment meets 25% minimum floor requirement', example: true })
   meets_floor: boolean;
 
-  @ApiProperty({ description: 'Number of installments', example: 3, required: false })
+  @ApiProperty({ description: 'Total number of installments (including down payment)', example: 2, required: false })
   installments?: number;
 
-  @ApiProperty({ description: 'Payment frequency', example: 'monthly', required: false })
+  @ApiProperty({ description: 'Payment frequency for subsequent payments', example: 'monthly', required: false })
   frequency?: string;
 
-  @ApiProperty({ description: 'Discount percentage applied (0-26)', example: 24, required: false })
+  @ApiProperty({ description: 'Discount percentage applied (0-24, capped at 24% maximum)', example: 22, required: false })
   discount_percent?: number;
 
   @ApiProperty({ description: 'Original amount before discount', example: 3500, required: false })

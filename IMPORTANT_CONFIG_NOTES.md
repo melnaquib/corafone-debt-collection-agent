@@ -89,48 +89,56 @@ Agent: "I'd be happy to help - I just need to verify your identity first. May I 
 
 **IMPORTANT**: The percentages (24%, 22%, 20%) are DISCOUNTS off the balance, NOT settlement percentages!
 
+**CRITICAL**: Consumer offer = DOWN PAYMENT (initial payment TODAY), not total settlement!
+
 ### Payment Options & Thresholds:
 
-The consumer offers what they can PAY (not a discount amount). Based on their offer as a % of original balance:
+The consumer offers what they can pay TODAY as a DOWN PAYMENT. Based on their down payment as a % of original balance:
 
-**CRITICAL: 25% Floor Rule Applies PER INSTALLMENT**
-- Each payment must be at least 25% of the original balance
-- This prevents settling the debt for too little while allowing payment plans
-
-1. **Full Payment (offer >= 100% of balance)**: 24% DISCOUNT → Consumer pays 76% of balance in 1 payment
+1. **Full Payment (down payment >= 76% of balance)**: 24% DISCOUNT → Consumer pays 76% of balance in 1 payment
    - Plan type: `full_payment`
-   - Example: $4,000 balance → pay $3,040 total, save $960
+   - Down payment threshold: 76% of balance
+   - **Example:** $5,000 balance, consumer offers $3,800 down (76%)
+     - Discount: 24%
+     - Total settlement: $5,000 × 0.76 = $3,800
+     - **Payment: [$3,800]**
+     - Saves: $1,200
    - Edge: e6 routes to `close_full_payment` node
 
-2. **2-Payment Plan (offer >= 50% of balance)**: 22% DISCOUNT → Consumer pays 78% of balance split in 2 payments
+2. **2-Payment Plan (down payment >= 50% of balance)**: 22% DISCOUNT → Consumer pays 78% of balance (76% if bank verified)
    - Plan type: `payment_plan_2`
-   - Minimum: 2 × 25% = 50% of balance
-   - Example: $4,000 balance → pay $3,120 total = $1,560 per payment, save $880
+   - Down payment threshold: 50% of balance
+   - **Example:** $5,000 balance, consumer offers $3,000 down (60%)
+     - Discount: 22% (24% if bank verified)
+     - Total settlement: $5,000 × 0.78 = $3,900 ($3,800 if verified)
+     - **Payments: [$3,000 down, $900 later]**
+     - Saves: $1,100 ($1,200 if verified)
    - Edge: e7 routes to `close_settlement` node (labeled "Close: 2-Payment Plan (22% off)")
 
-3. **3-Payment Plan (offer >= 75% of balance)**: 20% DISCOUNT → Consumer pays 80% of balance split in 3 payments
+3. **3-Payment Plan (down payment >= 25% of balance)**: 20% DISCOUNT → Consumer pays 80% of balance (78% if bank verified)
    - Plan type: `payment_plan_3`
-   - Minimum: 3 × 25% = 75% of balance
-   - Requires funds verification (only offered if verified)
-   - Example: $4,000 balance, offer $3,000 → pay $3,120 total = $1,040 per payment, save $880
+   - Down payment threshold: 25% of balance
+   - **Example:** $5,000 balance, consumer offers $2,000 down (40%)
+     - Discount: 20% (22% if bank verified)
+     - Total settlement: $5,000 × 0.80 = $4,000 ($3,900 if verified)
+     - **Payments: [$2,000 down, $1,000, $1,000]**
+     - Saves: $1,000 ($1,100 if verified)
    - Edge: e8 routes to `close_payment_plan` node (labeled "Close: 3-Payment Plan (20% off)")
 
-4. **Below Minimum for Plan (offer >= 25% but < 50%)**: REJECTED
-   - Plan type: `below_minimum_for_plan`
-   - Counter with 50% (minimum for 2-payment plan)
-   - Example: $4,000 balance, offer $1,200 (30%) → counter with $2,000
-
-5. **Below Floor (offer < 25% of balance)**: REJECTED
+4. **Below Floor (down payment < 25% of balance)**: REJECTED
    - Plan type: `below_floor`
-   - Counter with 25% (absolute minimum)
+   - Counter with 25% minimum
+   - **Example:** $6,000 balance, consumer offers $1,000 down (17%)
+     - **REJECTED** - below $1,500 minimum (25%)
+     - Ask consumer to increase to at least $1,500
    - Edge: e9 routes to `no_agreement` node
 
-### 25% Floor Rule (Per Installment):
-- **Each individual payment** must be at least 25% of the original balance
-- 1 payment plan: minimum 25% total (1 × 25%)
-- 2 payment plan: minimum 50% total (2 × 25%)
-- 3 payment plan: minimum 75% total (3 × 25%)
-- This ensures we don't settle the debt for too little
+### Key Points:
+- **consumer_offer = DOWN PAYMENT** (first payment made TODAY)
+- Agent should try to MAXIMIZE the down payment within conversation
+- Higher down payment → Better discount tier
+- 25% floor = minimum down payment
+- Remaining balance after down payment is split across remaining installments
 
 ### ABSOLUTE LIMITS (enforced by custom guardrails):
 - **MAX discount**: 24% (NEVER offer 25%, 30%, 40% or higher)
