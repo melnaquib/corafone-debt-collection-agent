@@ -327,3 +327,118 @@ Still give the standard offer! The tool already handled this. Just present the c
 
 Treat same as "no consent" - give standard offer. The system was unavailable, so proceed without bonus.
 
+
+---
+
+## AWS Nitro Enclave vsock Configuration
+
+The bank verification feature uses AWS Nitro Enclaves for secure, privacy-preserving credit checks.
+
+### Environment Variables
+
+Set these in your environment or `.env` file:
+
+```bash
+CREDIT_CHECK_TEE_CID=16        # Enclave Context ID (CID)
+CREDIT_CHECK_TEE_PORT=5000     # Enclave listening port
+```
+
+### How vsock Communication Works
+
+1. **Parent EC2 Instance** (this Node.js application) creates vsock connection
+2. **vsock** (virtio-socket) provides secure channel to enclave
+3. **Enclave** receives request, performs bank verification, returns response
+4. **No data leaves enclave** - bank account details stay encrypted inside TEE
+
+### vsock Protocol
+
+**Request** (sent to enclave):
+```json
+{
+  "consumer_id": "cust_001",
+  "payment_amount": 3040
+}
+```
+
+**Response** (from enclave):
+```json
+{
+  "status": "yes",
+  "message": "Funds verified for $3,040 payment"
+}
+```
+
+Status values:
+- `yes`: Sufficient funds confirmed
+- `no`: Insufficient funds
+- `cannot_confirm`: Unable to verify (bank API down, account closed, etc.)
+
+### Production Setup
+
+1. **Install netcat with vsock support** on EC2 instance:
+   ```bash
+   sudo yum install nmap-ncat  # Amazon Linux
+   # or
+   sudo apt-get install netcat-openbsd  # Ubuntu
+   ```
+
+2. **Verify vsock kernel module loaded**:
+   ```bash
+   lsmod | grep vhost_vsock
+   # If not loaded:
+   sudo modprobe vhost_vsock
+   ```
+
+3. **Start Nitro Enclave** with your credit check application
+
+4. **Set environment variables** in systemd service or docker-compose:
+   ```bash
+   export CREDIT_CHECK_TEE_CID=16
+   export CREDIT_CHECK_TEE_PORT=5000
+   ```
+
+5. **Test vsock connection**:
+   ```bash
+   echo '{"consumer_id":"test","payment_amount":1000}' | nc --vsock 16 5000
+   ```
+
+### Development/Testing Mode
+
+If `CREDIT_CHECK_TEE_CID` or `CREDIT_CHECK_TEE_PORT` are **not set**, the system automatically falls back to **mock verification**:
+
+- 70% chance: Returns "yes" (sufficient funds)
+- 20% chance: Returns "no" (insufficient)
+- 10% chance: Returns "cannot_confirm"
+
+This allows testing without an actual enclave.
+
+### Security Guarantees
+
+The AWS Nitro Enclave provides:
+1. **Isolated execution** - No SSH, no external network access
+2. **Encrypted memory** - Data in memory is encrypted
+3. **Attestation** - Cryptographic proof of enclave code integrity
+4. **vsock-only communication** - No TCP/IP exposure
+
+The bank account verification happens **entirely inside the enclave**:
+- ✅ Parent EC2 never sees bank account balance
+- ✅ Bank doesn't know who is checking (debt collector identity hidden)
+- ✅ Bank doesn't know what amount is being verified
+- ✅ Bank doesn't know why the check is happening
+- ✅ Only yes/no/cannot_confirm response exits the enclave
+
+### Troubleshooting
+
+**Error: "nc: invalid option -- 'vsock'"**
+- Solution: Install nmap-ncat or netcat-openbsd (not BSD netcat)
+
+**Error: "Enclave connection timeout"**
+- Check enclave is running: `nitro-cli describe-enclaves`
+- Verify CID and PORT match your enclave configuration
+- Check enclave logs: `nitro-cli console --enclave-id <eid>`
+
+**Fallback to mock even with env vars set**
+- Check `nc --vsock` command exists
+- Verify vsock kernel module loaded
+- Check enclave is listening on specified port
+

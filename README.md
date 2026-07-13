@@ -75,11 +75,13 @@ John Smith
 June 15, 1985
 last 4digits 5234
 balance 3500
+client current bank account balance; known only to his bank; 1500
 
 ### Includes Eleven Labs test
 
 ## Future work
-
+- Dashboard for prompts / agents work
+- Dashboard for collection operations 
 - Use Eleven labs Procedures, to better manage steps and prompts
 - add more negotation skills
 - add more guardrails and tests for regulations
@@ -90,4 +92,4 @@ balance 3500
 - add more guardrails and tests for regulations
 - Persist negotiation state per call so a dropped call can resume instead of restarting
 - add side notes on call for offer tools, like customer cooperation etc.
-- use tools like garak to assess system security
+- integrations
