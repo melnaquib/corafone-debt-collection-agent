@@ -93,6 +93,10 @@ Agent: "I'd be happy to help - I just need to verify your identity first. May I 
 
 The consumer offers what they can PAY (not a discount amount). Based on their offer as a % of original balance:
 
+**CRITICAL: 25% Floor Rule Applies PER INSTALLMENT**
+- Each payment must be at least 25% of the original balance
+- This prevents settling the debt for too little while allowing payment plans
+
 1. **Full Payment (offer >= 100% of balance)**: 24% DISCOUNT → Consumer pays 76% of balance in 1 payment
    - Plan type: `full_payment`
    - Example: $4,000 balance → pay $3,040 total, save $960
@@ -100,20 +104,33 @@ The consumer offers what they can PAY (not a discount amount). Based on their of
 
 2. **2-Payment Plan (offer >= 50% of balance)**: 22% DISCOUNT → Consumer pays 78% of balance split in 2 payments
    - Plan type: `payment_plan_2`
+   - Minimum: 2 × 25% = 50% of balance
    - Example: $4,000 balance → pay $3,120 total = $1,560 per payment, save $880
    - Edge: e7 routes to `close_settlement` node (labeled "Close: 2-Payment Plan (22% off)")
 
-3. **3-Payment Plan (offer >= 25% floor)**: 20% DISCOUNT → Consumer pays 80% of balance split in 3 payments
+3. **3-Payment Plan (offer >= 75% of balance)**: 20% DISCOUNT → Consumer pays 80% of balance split in 3 payments
    - Plan type: `payment_plan_3`
-   - Example: $4,000 balance → pay $3,200 total = $1,067 per payment, save $800
+   - Minimum: 3 × 25% = 75% of balance
+   - Requires funds verification (only offered if verified)
+   - Example: $4,000 balance, offer $3,000 → pay $3,120 total = $1,040 per payment, save $880
    - Edge: e8 routes to `close_payment_plan` node (labeled "Close: 3-Payment Plan (20% off)")
 
-4. **Below Floor (offer < 25% of balance)**: REJECTED
+4. **Below Minimum for Plan (offer >= 25% but < 50%)**: REJECTED
+   - Plan type: `below_minimum_for_plan`
+   - Counter with 50% (minimum for 2-payment plan)
+   - Example: $4,000 balance, offer $1,200 (30%) → counter with $2,000
+
+5. **Below Floor (offer < 25% of balance)**: REJECTED
    - Plan type: `below_floor`
+   - Counter with 25% (absolute minimum)
    - Edge: e9 routes to `no_agreement` node
 
-### 25% Floor Rule:
-The 25% floor means the consumer's offer must be at least 25% of the total balance to qualify for ANY plan.
+### 25% Floor Rule (Per Installment):
+- **Each individual payment** must be at least 25% of the original balance
+- 1 payment plan: minimum 25% total (1 × 25%)
+- 2 payment plan: minimum 50% total (2 × 25%)
+- 3 payment plan: minimum 75% total (3 × 25%)
+- This ensures we don't settle the debt for too little
 
 ### ABSOLUTE LIMITS (enforced by custom guardrails):
 - **MAX discount**: 24% (NEVER offer 25%, 30%, 40% or higher)

@@ -103,9 +103,11 @@ node test-guardrails.js
 The test validates:
 1. Full payment caps at 24% (no bonus applied)
 2. 2-payment plan: 22% → 24% with verification
-3. 3-payment plan: 20% → 22% with verification
-4. No offer ever exceeds 24% discount
-5. No plan ever exceeds 3 installments
+3. 3-payment plan requires 75% offer (3 × 25% floor per installment)
+4. Offers between 25%-50% are rejected (below minimum for any plan)
+5. No offer ever exceeds 24% discount
+6. No plan ever exceeds 3 installments
+7. Each installment is at least 25% of original balance
 
 ## Integration with ElevenLabs
 

@@ -76,16 +76,17 @@ export class CollectService {
     }
 
     // DISCOUNT LOGIC (not settlement percentages!):
-    // 25% floor = minimum per any one payment (floor = 25% of balance)
+    // 25% floor = minimum per installment (each payment must be at least 25% of balance)
     // THRESHOLDS based on consumer's offer (% of original balance):
-    // - Offer >= 100% of balance: 1 payment with 24% DISCOUNT → pay 76% (NO BONUS - already at 24% max)
+    // - Offer >= 25% of balance: 1 payment with 24% DISCOUNT → pay 76% (NO BONUS - already at 24% max)
     // - Offer >= 50% of balance: 2 payments with 22% DISCOUNT (24% if verified) → pay 78% (76% verified) split in 2
-    // - Offer >= 25% of balance (floor): 3-payment plan (20% DISCOUNT, 22% verified) ONLY if funds verified;
-    //   otherwise capped at the 2-payment plan above (half the amount per payment)
+    //   (ensures each payment >= 25% of balance: 50% / 2 = 25% per payment minimum)
+    // - Offer >= 75% of balance: 3-payment plan (20% DISCOUNT, 22% verified) ONLY if funds verified
+    //   (ensures each payment >= 25% of balance: 75% / 3 = 25% per payment minimum)
     // - Offer < 25% floor: reject, ask to increase
     //
     // VERIFICATION BONUS: +2% extra discount if funds_verification_status = "yes" (CAPPED at 24% maximum)
-    // GUARDRAIL: NEVER exceed 24% discount, NEVER exceed 3 payments
+    // GUARDRAIL: NEVER exceed 24% discount, NEVER exceed 3 payments, each payment >= 25% of balance
 
     let counter_offer: number;
     let plan_type: string;
@@ -95,10 +96,15 @@ export class CollectService {
     let discount_applied = 0;
     let original_amount: number;
 
+    // Calculate thresholds based on 25% floor per installment
+    const threshold_3_payment = Math.round(account_balance * 0.75); // 3 × 25% = 75%
+    const threshold_2_payment = Math.round(account_balance * 0.5);  // 2 × 25% = 50%
+    const threshold_1_payment = Math.round(account_balance * 0.25); // 1 × 25% = 25%
+
     if (consumer_offer >= account_balance) {
       // Full payment (1 payment) - 24% DISCOUNT → pay 76% of balance
       // NO VERIFICATION BONUS - already at 24% maximum (guardrail enforcement)
-      // Example: $4000 balance → $3040 (same whether verified or not)
+      // Example: $4000 balance, offer $4000 → pay $3040 (same whether verified or not)
       original_amount = account_balance;
       base_discount = this.MAX_DISCOUNT_PERCENT; // Already at maximum
 
@@ -153,17 +159,13 @@ export class CollectService {
       };
     };
 
-    if (consumer_offer >= account_balance * 0.5) {
-      return twoPaymentPlan();
-    }
-
-    // 3-payment plan (MOST GENEROUS) is only offered once funds are verified as sufficient.
-    // Without verification (verification failed, or consumer didn't consent), the most we'll
-    // offer is the 2-payment plan (half the amount per payment) below.
-    if (consumer_offer >= floor && funds_verification_status === 'yes') {
+    // Check 3-payment plan BEFORE 2-payment plan (higher threshold takes priority)
+    // 3-payment plan requires offer >= 75% of balance (3 × 25% floor per installment)
+    // ONLY offered once funds are verified as sufficient
+    if (consumer_offer >= threshold_3_payment && funds_verification_status === 'yes') {
       // 20% DISCOUNT → pay 80% of balance split in 3
       // BONUS: 22% if funds verified → pay 78% of balance split in 3 (capped at 24% max)
-      // Example: $4000 balance → $1067/payment standard, $1040/payment with verification
+      // Example: $4000 balance, offer $3000 → pay $3120 total = $1040/payment
       original_amount = account_balance;
       base_discount = 0.20;
 
@@ -194,14 +196,30 @@ export class CollectService {
       };
     }
 
-    if (consumer_offer >= floor) {
-      // Unverified but still meets the floor - cap the concession at the 2-payment plan.
+    // 2-payment plan for offers >= 50% (2 × 25% floor)
+    if (consumer_offer >= threshold_2_payment) {
       return twoPaymentPlan();
     }
 
-    // Below floor - return the floor amount as counter
+    // Offers between 25% and 50% don't meet minimum for any multi-payment plan
+    // Ask consumer to increase their offer
+    if (consumer_offer >= threshold_1_payment) {
+      return {
+        counter_offer: threshold_2_payment,
+        plan_type: 'below_minimum_for_plan',
+        meets_floor: false,
+        installments: 1,
+        frequency: 'n_a',
+        discount_percent: 0,
+        funds_verification_status,
+        funds_verified: false,
+        verification_bonus_applied: false,
+      };
+    }
+
+    // Below 25% floor - way too low, reject
     return {
-      counter_offer: floor,
+      counter_offer: threshold_1_payment,
       plan_type: 'below_floor',
       meets_floor: false,
       installments: 1,

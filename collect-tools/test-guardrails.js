@@ -138,28 +138,28 @@ async function runTests() {
     failed++;
   }
 
-  // Test 4: 3-payment plan should never exceed 3 installments
-  console.log('\n📋 Test 4: 3-payment plan installments (should be exactly 3)');
+  // Test 4: 3-payment plan requires 75% offer (3 × 25% floor per installment)
+  console.log('\n📋 Test 4: 3-payment plan floor enforcement (needs >= 75% offer)');
   try {
     const result = await makeRequest('/api/collect/negotiate_calc', {
       account_balance: TEST_BALANCE,
-      consumer_offer: TEST_BALANCE * 0.3, // 30% - qualifies for 3-payment if verified
+      consumer_offer: TEST_BALANCE * 0.75, // 75% - minimum for 3-payment if verified
       attempt_no: 1,
       consumer_id: 'test_customer',
       consent_to_verify_funds: true
     });
 
     console.log(`   Balance: $${TEST_BALANCE}`);
-    console.log(`   Offer: $${TEST_BALANCE * 0.3} (30%)`);
+    console.log(`   Offer: $${TEST_BALANCE * 0.75} (75%)`);
     console.log(`   Plan type: ${result.plan_type}`);
     console.log(`   Installments: ${result.installments}`);
     console.log(`   Discount: ${result.discount_percent}%`);
 
-    if (result.installments <= 3) {
-      console.log('   ✅ PASS: Installments respect 3 maximum');
+    if (result.plan_type === 'payment_plan_3' && result.installments === 3) {
+      console.log('   ✅ PASS: 75% offer gets 3-payment plan');
       passed++;
     } else {
-      console.log(`   ❌ FAIL: Installments ${result.installments} exceeds 3 maximum`);
+      console.log(`   ❌ FAIL: Expected 3-payment plan, got ${result.plan_type}`);
       failed++;
     }
   } catch (error) {
@@ -167,14 +167,42 @@ async function runTests() {
     failed++;
   }
 
-  // Test 5: All discounts should never exceed 24%
-  console.log('\n📋 Test 5: Comprehensive discount cap test (all scenarios)');
+  // Test 5: Offers below 50% but above 25% should be rejected
+  console.log('\n📋 Test 5: Floor enforcement (25%-50% offers rejected)');
+  try {
+    const result = await makeRequest('/api/collect/negotiate_calc', {
+      account_balance: TEST_BALANCE,
+      consumer_offer: TEST_BALANCE * 0.4, // 40% - below 50% minimum for 2-payment
+      attempt_no: 1,
+      consumer_id: 'test_customer',
+      consent_to_verify_funds: true
+    });
+
+    console.log(`   Balance: $${TEST_BALANCE}`);
+    console.log(`   Offer: $${TEST_BALANCE * 0.4} (40%)`);
+    console.log(`   Plan type: ${result.plan_type}`);
+    console.log(`   Counter-offer: $${result.counter_offer}`);
+
+    if (result.plan_type === 'below_minimum_for_plan' && result.counter_offer === TEST_BALANCE * 0.5) {
+      console.log('   ✅ PASS: Offer rejected, counter at 50% (2-payment minimum)');
+      passed++;
+    } else {
+      console.log(`   ❌ FAIL: Expected rejection, got ${result.plan_type}`);
+      failed++;
+    }
+  } catch (error) {
+    console.log(`   ❌ ERROR: ${error.message}`);
+    failed++;
+  }
+
+  // Test 6: All discounts should never exceed 24%
+  console.log('\n📋 Test 6: Comprehensive discount cap test (all scenarios)');
   const scenarios = [
     { offer: TEST_BALANCE, name: 'Full payment', verified: true },
     { offer: TEST_BALANCE, name: 'Full payment', verified: false },
     { offer: TEST_BALANCE * 0.6, name: '2-payment', verified: true },
     { offer: TEST_BALANCE * 0.6, name: '2-payment', verified: false },
-    { offer: TEST_BALANCE * 0.3, name: '3-payment', verified: true },
+    { offer: TEST_BALANCE * 0.75, name: '3-payment', verified: true },
   ];
 
   let allWithinLimit = true;
