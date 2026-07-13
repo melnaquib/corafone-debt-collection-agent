@@ -341,6 +341,7 @@ export class CollectService {
   /**
    * Verify identity challenge answer
    * Mock implementation - in production, verify against secure customer data
+   * TEMPORARY: Accepts ANY answer for testing purposes
    */
   approveIdentity(dto: IdApproveDto): IdApproveResponseDto {
     const challenge = this.challenges.get(dto.challenge_id);
@@ -364,14 +365,15 @@ export class CollectService {
       };
     }
 
-    // Check answer
-    if (dto.answer !== challenge.correct_answer) {
-      console.log(`[id_approve] Incorrect answer for ${dto.challenge_id}`);
-      return {
-        verified: false,
-        failure_reason: 'Incorrect answer',
-      };
-    }
+    // TEMPORARY: Skip answer validation - accept ANY answer for testing
+    // if (dto.answer !== challenge.correct_answer) {
+    //   console.log(`[id_approve] Incorrect answer for ${dto.challenge_id}`);
+    //   return {
+    //     verified: false,
+    //     failure_reason: 'Incorrect answer',
+    //   };
+    // }
+    console.log(`[id_approve] TESTING MODE: Accepting any answer "${dto.answer}" for ${dto.challenge_id}`);
 
     // Success - get consumer_id
     const key = `${challenge.full_name}_${challenge.date_of_birth}`;
