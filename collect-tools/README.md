@@ -81,7 +81,31 @@ npm run build
 npm run start:prod
 ```
 
-The API will be available at `http://localhost:3000`
+The API will be available at `http://localhost:3001`
+
+## Testing Guardrails
+
+The system enforces critical business guardrails:
+- **Maximum discount**: 24% (NEVER exceeded, even with verification bonus)
+- **Maximum installments**: 3 payments
+- **Minimum floor**: 25% of balance
+
+To test guardrail enforcement:
+
+```bash
+# Start the server first
+npm start
+
+# In another terminal, run the test
+node test-guardrails.js
+```
+
+The test validates:
+1. Full payment caps at 24% (no bonus applied)
+2. 2-payment plan: 22% → 24% with verification
+3. 3-payment plan: 20% → 22% with verification
+4. No offer ever exceeds 24% discount
+5. No plan ever exceeds 3 installments
 
 ## Integration with ElevenLabs
 

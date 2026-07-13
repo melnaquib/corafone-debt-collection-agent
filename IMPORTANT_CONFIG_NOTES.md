@@ -209,8 +209,8 @@ The agent has access to these MCP server tools via `@rekog/mcp-nest`:
   - `verification_bonus_applied`: Boolean (true if extra 2% discount was given)
 - **When to use**: After consumer states what they can pay AND after asking for verification consent
 - **CRITICAL**: ALWAYS use this tool, never invent payment amounts
-- **Verification Bonus**: If funds verify as sufficient, consumer gets EXTRA 2% discount:
-  - Full payment: 24% → 26%
+- **Verification Bonus**: If funds verify as sufficient, consumer gets EXTRA 2% discount (CAPPED at 24% maximum):
+  - Full payment: 24% (NO BONUS - already at maximum guardrail)
   - 2-payment: 22% → 24%
   - 3-payment: 20% → 22%
 
@@ -303,17 +303,17 @@ After consumer proposes a payment amount, the agent MUST ask for consent to veri
    - State offer with enthusiasm
    - If bonus applied, mention: "That's the verified funds bonus working for you!"
 
-### Incentive Structure:
+### Incentive Structure (GUARDRAIL: MAX 24% discount):
 
 | Payment Plan | Standard Discount | With Verified Funds | Extra Savings |
 |--------------|-------------------|---------------------|---------------|
-| 1 payment    | 24% off           | 26% off             | +2%          |
+| 1 payment    | 24% off           | 24% off (no bonus)  | N/A (at max) |
 | 2 payments   | 22% off           | 24% off             | +2%          |
 | 3 payments   | 20% off           | 22% off             | +2%          |
 
-**Example:** $4,000 balance, full payment offer
-- Standard: Pay $3,040, save $960 (24%)
-- Verified: Pay $2,960, save $1,040 (26%) - **$80 more savings!**
+**Example:** $4,000 balance, 2-payment plan
+- Standard: Pay $3,120 total = $1,560/payment, save $880 (22%)
+- Verified: Pay $3,040 total = $1,520/payment, save $960 (24%) - **$80 more savings!**
 
 ### If Consumer Declines Consent:
 

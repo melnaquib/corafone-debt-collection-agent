@@ -10,22 +10,48 @@ const execAsync = promisify(exec);
 
 @Injectable()
 export class CollectService {
+  // GUARDRAILS - CRITICAL: DO NOT EXCEED THESE LIMITS
+  private readonly MAX_DISCOUNT_PERCENT = 0.24;  // 24% maximum discount
+  private readonly MAX_INSTALLMENTS = 3;          // 3 payments maximum
+  private readonly VERIFICATION_BONUS = 0.02;     // +2% bonus if funds verified
+  private readonly FLOOR_PERCENT = 0.25;          // 25% minimum floor
+
+  /**
+   * Apply verification bonus with guardrail enforcement
+   * NEVER exceeds MAX_DISCOUNT_PERCENT (24%)
+   */
+  private applyVerificationBonus(baseDiscount: number, fundsVerified: boolean): { discount: number; bonusApplied: boolean } {
+    if (!fundsVerified) {
+      return { discount: baseDiscount, bonusApplied: false };
+    }
+
+    const proposedDiscount = baseDiscount + this.VERIFICATION_BONUS;
+
+    // GUARDRAIL ENFORCEMENT: Cap at maximum
+    if (proposedDiscount > this.MAX_DISCOUNT_PERCENT) {
+      console.log(`[GUARDRAIL] Proposed discount ${proposedDiscount * 100}% exceeds maximum ${this.MAX_DISCOUNT_PERCENT * 100}%. Capping at ${this.MAX_DISCOUNT_PERCENT * 100}%.`);
+      return { discount: this.MAX_DISCOUNT_PERCENT, bonusApplied: false };
+    }
+
+    return { discount: proposedDiscount, bonusApplied: true };
+  }
+
   /**
    * Calculate counter-offer based on consumer's offer and account balance
    * Optionally verifies funds via AWS Enclave if consumer consents
    *
-   * Discount structure:
-   * - Full payment (1 payment): 24% discount (26% if funds verified)
+   * Discount structure (GUARDRAIL: MAX 24% discount):
+   * - Full payment (1 payment): 24% discount (no bonus - already at maximum)
    * - 2-payment plan: 22% discount (24% if funds verified)
    * - 3-payment plan: 20% discount (22% if funds verified)
    *
-   * Verification bonus: +2% extra discount if funds verified as sufficient
+   * Verification bonus: Up to +2% extra discount (capped at 24% maximum)
    */
   async calculateNegotiation(dto: NegotiateCalcDto): Promise<NegotiateCalcResponseDto> {
     const { account_balance, consumer_offer, attempt_no, consumer_id, consent_to_verify_funds } = dto;
 
-    // 25% floor check
-    const floor = Math.round(account_balance * 0.25);
+    // 25% floor check (using guardrail constant)
+    const floor = Math.round(account_balance * this.FLOOR_PERCENT);
     const meets_floor = consumer_offer >= floor;
 
     console.log(`[negotiate_calc] balance=${account_balance}, offer=${consumer_offer}, floor=${floor}, meets_floor=${meets_floor}, consent_to_verify=${consent_to_verify_funds}`);
@@ -52,13 +78,14 @@ export class CollectService {
     // DISCOUNT LOGIC (not settlement percentages!):
     // 25% floor = minimum per any one payment (floor = 25% of balance)
     // THRESHOLDS based on consumer's offer (% of original balance):
-    // - Offer >= 100% of balance: 1 payment with 24% DISCOUNT (26% if verified) → pay 76% (74% verified)
+    // - Offer >= 100% of balance: 1 payment with 24% DISCOUNT → pay 76% (NO BONUS - already at 24% max)
     // - Offer >= 50% of balance: 2 payments with 22% DISCOUNT (24% if verified) → pay 78% (76% verified) split in 2
     // - Offer >= 25% of balance (floor): 3-payment plan (20% DISCOUNT, 22% verified) ONLY if funds verified;
     //   otherwise capped at the 2-payment plan above (half the amount per payment)
     // - Offer < 25% floor: reject, ask to increase
     //
-    // VERIFICATION BONUS: +2% extra discount if funds_verification_status = "yes"
+    // VERIFICATION BONUS: +2% extra discount if funds_verification_status = "yes" (CAPPED at 24% maximum)
+    // GUARDRAIL: NEVER exceed 24% discount, NEVER exceed 3 payments
 
     let counter_offer: number;
     let plan_type: string;
@@ -70,18 +97,15 @@ export class CollectService {
 
     if (consumer_offer >= account_balance) {
       // Full payment (1 payment) - 24% DISCOUNT → pay 76% of balance
-      // BONUS: 26% if funds verified → pay 74% of balance
-      // Example: $4000 balance → $3040 standard, $2960 with verification
+      // NO VERIFICATION BONUS - already at 24% maximum (guardrail enforcement)
+      // Example: $4000 balance → $3040 (same whether verified or not)
       original_amount = account_balance;
-      base_discount = 0.24;
+      base_discount = this.MAX_DISCOUNT_PERCENT; // Already at maximum
 
-      // Apply +2% bonus if funds verified
-      if (funds_verification_status === 'yes') {
-        discount_applied = 0.26;
-        verification_bonus_applied = true;
-      } else {
-        discount_applied = base_discount;
-      }
+      const { discount: discount_applied, bonusApplied } = this.applyVerificationBonus(
+        base_discount,
+        funds_verification_status === 'yes'
+      );
 
       counter_offer = Math.round(account_balance * (1 - discount_applied));
 
@@ -96,24 +120,20 @@ export class CollectService {
         savings_amount: original_amount - counter_offer,
         funds_verification_status,
         funds_verified: funds_verification_status === 'yes',
-        verification_bonus_applied,
+        verification_bonus_applied: bonusApplied,
       };
     }
 
     // 2-payment plan - 22% DISCOUNT → pay 78% of balance split in 2
-    // BONUS: 24% if funds verified → pay 76% of balance split in 2
+    // BONUS: 24% if funds verified → pay 76% of balance split in 2 (capped at 24% max)
     // Example: $4000 balance → $1560/payment standard, $1520/payment with verification
     const twoPaymentPlan = () => {
       original_amount = account_balance;
       base_discount = 0.22;
 
-      // Apply +2% bonus if funds verified
-      if (funds_verification_status === 'yes') {
-        discount_applied = 0.24;
-        verification_bonus_applied = true;
-      } else {
-        discount_applied = base_discount;
-      }
+      // Apply +2% bonus if funds verified (with guardrail enforcement)
+      const { discount: discount_applied, bonusApplied: verification_bonus_applied } =
+        this.applyVerificationBonus(base_discount, funds_verification_status === 'yes');
 
       const total_discounted = Math.round(account_balance * (1 - discount_applied));
       counter_offer = Math.round(total_discounted / 2); // Per payment amount
@@ -142,21 +162,28 @@ export class CollectService {
     // offer is the 2-payment plan (half the amount per payment) below.
     if (consumer_offer >= floor && funds_verification_status === 'yes') {
       // 20% DISCOUNT → pay 80% of balance split in 3
-      // BONUS: 22% if funds verified → pay 78% of balance split in 3
+      // BONUS: 22% if funds verified → pay 78% of balance split in 3 (capped at 24% max)
       // Example: $4000 balance → $1067/payment standard, $1040/payment with verification
       original_amount = account_balance;
       base_discount = 0.20;
-      discount_applied = 0.22;
-      verification_bonus_applied = true;
+
+      // Apply +2% bonus if funds verified (with guardrail enforcement)
+      const { discount: discount_applied, bonusApplied: verification_bonus_applied } =
+        this.applyVerificationBonus(base_discount, funds_verification_status === 'yes');
 
       const total_discounted = Math.round(account_balance * (1 - discount_applied));
       counter_offer = Math.round(total_discounted / 3); // Per payment amount
+
+      // GUARDRAIL: Enforce max installments
+      if (3 > this.MAX_INSTALLMENTS) {
+        console.error(`[GUARDRAIL VIOLATION] Attempted to offer ${3} installments, max is ${this.MAX_INSTALLMENTS}`);
+      }
 
       return {
         counter_offer,
         plan_type: 'payment_plan_3',
         meets_floor: true,
-        installments: 3,
+        installments: Math.min(3, this.MAX_INSTALLMENTS), // Enforce max
         frequency: 'monthly',
         discount_percent: discount_applied * 100,
         original_amount,
