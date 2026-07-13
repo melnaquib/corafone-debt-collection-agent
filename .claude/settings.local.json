@@ -10,7 +10,11 @@
       "WebSearch",
       "WebFetch(domain:elevenlabs.io)",
       "Bash(curl:*)",
-      "Bash(elevenlabs agents pull:*)"
+      "Bash(elevenlabs agents pull:*)",
+      "Bash(npx tsc *)",
+      "Bash(chmod +x run_mcp.sh)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ],
     "deny": [],
     "ask": []
