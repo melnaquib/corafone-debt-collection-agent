@@ -1,0 +1,92 @@
+Corafone task 
+
+Scenario:  
+
+●  A consumer wants to make a small payment towards his debt and makes a phone 
+
+call to do this. Your job is to get the user to pay the most. 
+
+Task:  
+
+●  Create a voice agent in an AI voice platform that negotiates the payment amount with 
+the user and, based on the outcome of the conversation, activates a workflow the 
+selected plan and payment information to another system 
+
+●  Acceptable payment options (in order): 
+
+○  Full payment 
+○  Highest amount downpayment + one more payment 
+○  Settlement (up 20 % off) 
+■  Max 3 payments 
+
+○  Payment plan (no discount) 
+■  Over 3 months max 
+■  With biweekly, weekly or monthly payments 
+
+●  The smallest payment can never be less than 25 % 
+
+Requirements: 
+
+●  The agent needs to get the payment amount provided by the user during the call and 
+the negotiated amount needs to be calculated externally (outside the agent) and 
+communicated back to the user. 
+
+Objectives: 
+
+●  Build a voice agent that handles dynamic variables  
+●  Use tools to trigger functions during the call  
+●  Calculate a new proposed amount in an external system and send it back to the 
+
+agent during the call 
+
+●  Define three outcome scenarios with different messages 
+●  Based on the outcome of the call, send one of those messages to another system 
+●  Bonus (optional): your agent can negotiate in multiple languages 
+
+We will assess your solution based on these criteria: 
+
+●  Agent performance 
+●  Creativity 
+●  Completeness 
+●  Prompt quality 
+●  Technical prowess 
+
+Hints: 
+
+●  Plan the conversation first, then your tool requirements 
+●  You choose the external systems 
+●  Prompting matters 
+●  Simplicity is key 
+●  Be creative 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Timeline and delivery format: 
+
+●  Deadline: As soon as possible 
+●  Send a video recording with screen sharing (Claap / Loom) to aman@corafone.com, 
+
+adrian@corafone.com & lana@corafone.com 
+
+●  Walk through your solution, prompt, code, and talk to the agent during the recording 
+●  Explain clearly your thinking and why you chose to solve it the way you did 
+
+Questions can be asked to: 
+
+-  Adrian on adrian@corafone.com 
+-  WhatsApp +46729711153 
+
+-  Aman on aman@corafone.com 
+-  +47 46164687 
+
+Good luck! :) 
+
+ 
+ 
+ 
+

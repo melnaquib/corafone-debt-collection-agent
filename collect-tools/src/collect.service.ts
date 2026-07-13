@@ -488,7 +488,7 @@ export class CollectService {
    *
    * Flow:
    * 1. Connect to enclave via vsock (CID:PORT)
-   * 2. Send JSON request: { consumer_id, payment_amount }
+   * 2. Send amount as string: "3000"
    * 3. Receive JSON response: { status: 'yes'|'no'|'cannot_confirm', message: string }
    * 4. Close connection
    *
@@ -513,10 +513,10 @@ export class CollectService {
 
     // Node.js net module doesn't natively support AF_VSOCK, so we use nc (netcat)
     // with vsock support, the standard production approach for AWS Nitro Enclaves.
-    const request = JSON.stringify({ consumer_id, payment_amount });
-    const command = `echo '${request}' | nc --vsock ${enclaveCid} ${enclavePort}`;
+    // Send only the payment amount as a string (not JSON)
+    const command = `echo '${payment_amount}' | nc --vsock ${enclaveCid} ${enclavePort}`;
 
-    console.log(`[vsock] Executing: nc --vsock ${enclaveCid} ${enclavePort}`);
+    console.log(`[vsock] Executing: nc --vsock ${enclaveCid} ${enclavePort}, sending amount: ${payment_amount}`);
 
     const { stdout, stderr } = await execAsync(command, { timeout: 5000 });
     if (stderr) {

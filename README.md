@@ -2,6 +2,16 @@
 
 Inbound calls voice agent that handles debtor calls and negotiates a payment plan, trying to maximize what the customer pays. The agent uses external systems to handle id verification and calculating offers
 
+# Basic features implemented;
+- basic workflow
+- Secure Trusted Execution to verify client balance covers offer.
+- compliance mir miranda, no calls with minors etc.
+- use mcp tools for id verification
+- use mcp tools to calc offers
+- multilang, spanish, arabic
+- business guardrails
+- security guardrails
+
 ## Assumptions
 Questions/assumptions;
 
@@ -35,7 +45,7 @@ elevenlabs agents push
 elevenlabs tools push
 elevenlabs tests push
 - one down side I found it harder to manage prompts, plan for future work to use procedure to faciliate prompt versioning and monitoring, and collaboration with team members.
-
+- use AWS Enclave for Trusted Execution Environment implementation.
 ## Flow
 
 1. **Greeting** - Agent introduces itself, gives mini-Miranda, asks for consent to record
