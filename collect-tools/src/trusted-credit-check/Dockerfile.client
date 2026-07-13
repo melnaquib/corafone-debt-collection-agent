@@ -1,0 +1,12 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN npm install --omit=dev
+
+COPY client server.ts constants.ts tsconfig.json ./
+
+RUN npm install -g typescript && tsc
+
+CMD ["node", "client.js"]

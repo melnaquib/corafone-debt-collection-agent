@@ -3,7 +3,6 @@ import { NegotiateCalcDto, NegotiateCalcResponseDto } from './dto/negotiate-calc
 import { SendOutcomeDto, SendOutcomeResponseDto } from './dto/send-outcome.dto';
 import { IdChallengeDto, IdChallengeResponseDto, IdApproveDto, IdApproveResponseDto, GetDebtDetailsDto, GetDebtDetailsResponseDto } from './dto/identity.dto';
 import { VerifyPaymentDto, VerifyPaymentResponseDto } from './dto/verify-payment.dto';
-import * as net from 'net';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
@@ -55,7 +54,8 @@ export class CollectService {
     // THRESHOLDS based on consumer's offer (% of original balance):
     // - Offer >= 100% of balance: 1 payment with 24% DISCOUNT (26% if verified) → pay 76% (74% verified)
     // - Offer >= 50% of balance: 2 payments with 22% DISCOUNT (24% if verified) → pay 78% (76% verified) split in 2
-    // - Offer >= 25% of balance (floor): 3 payments with 20% DISCOUNT (22% if verified) → pay 80% (78% verified) split in 3
+    // - Offer >= 25% of balance (floor): 3-payment plan (20% DISCOUNT, 22% verified) ONLY if funds verified;
+    //   otherwise capped at the 2-payment plan above (half the amount per payment)
     // - Offer < 25% floor: reject, ask to increase
     //
     // VERIFICATION BONUS: +2% extra discount if funds_verification_status = "yes"
@@ -100,10 +100,10 @@ export class CollectService {
       };
     }
 
-    if (consumer_offer >= account_balance * 0.5) {
-      // 2-payment plan - 22% DISCOUNT → pay 78% of balance split in 2
-      // BONUS: 24% if funds verified → pay 76% of balance split in 2
-      // Example: $4000 balance → $1560/payment standard, $1520/payment with verification
+    // 2-payment plan - 22% DISCOUNT → pay 78% of balance split in 2
+    // BONUS: 24% if funds verified → pay 76% of balance split in 2
+    // Example: $4000 balance → $1560/payment standard, $1520/payment with verification
+    const twoPaymentPlan = () => {
       original_amount = account_balance;
       base_discount = 0.22;
 
@@ -131,22 +131,23 @@ export class CollectService {
         funds_verified: funds_verification_status === 'yes',
         verification_bonus_applied,
       };
+    };
+
+    if (consumer_offer >= account_balance * 0.5) {
+      return twoPaymentPlan();
     }
 
-    if (consumer_offer >= floor) {
-      // 3-payment plan (MAX) - 20% DISCOUNT → pay 80% of balance split in 3
+    // 3-payment plan (MOST GENEROUS) is only offered once funds are verified as sufficient.
+    // Without verification (verification failed, or consumer didn't consent), the most we'll
+    // offer is the 2-payment plan (half the amount per payment) below.
+    if (consumer_offer >= floor && funds_verification_status === 'yes') {
+      // 20% DISCOUNT → pay 80% of balance split in 3
       // BONUS: 22% if funds verified → pay 78% of balance split in 3
       // Example: $4000 balance → $1067/payment standard, $1040/payment with verification
       original_amount = account_balance;
       base_discount = 0.20;
-
-      // Apply +2% bonus if funds verified
-      if (funds_verification_status === 'yes') {
-        discount_applied = 0.22;
-        verification_bonus_applied = true;
-      } else {
-        discount_applied = base_discount;
-      }
+      discount_applied = 0.22;
+      verification_bonus_applied = true;
 
       const total_discounted = Math.round(account_balance * (1 - discount_applied));
       counter_offer = Math.round(total_discounted / 3); // Per payment amount
@@ -161,9 +162,14 @@ export class CollectService {
         original_amount,
         savings_amount: original_amount - total_discounted,
         funds_verification_status,
-        funds_verified: funds_verification_status === 'yes',
+        funds_verified: true,
         verification_bonus_applied,
       };
+    }
+
+    if (consumer_offer >= floor) {
+      // Unverified but still meets the floor - cap the concession at the 2-payment plan.
+      return twoPaymentPlan();
     }
 
     // Below floor - return the floor amount as counter
@@ -401,7 +407,7 @@ export class CollectService {
     }
 
     try {
-      // Call AWS Nitro Enclave via vsock (requires CREDIT_CHECK_TEE_CID and CREDIT_CHECK_TEE_PORT env vars)
+      // Call AWS Nitro Enclave via vsock (requires BANK_TEE_CID and BANK_TEE_PORT env vars)
       const enclaveResponse = await this.callAwsEnclaveViaVsock(consumer_id, payment_amount);
 
       const verification_id = `enclave_verify_${Date.now()}`;
@@ -426,8 +432,11 @@ export class CollectService {
   }
 
   /**
-   * Call AWS Nitro Enclave via vsock for credit check
-   * Uses environment variables: CREDIT_CHECK_TEE_CID and CREDIT_CHECK_TEE_PORT
+   * Call the bank's AWS Nitro Enclave via vsock for balance verification.
+   * Uses environment variables: BANK_TEE_CID and BANK_TEE_PORT
+   *
+   * ONLY reached via calculateNegotiation -> verifyPaymentCoverage, which is only invoked
+   * when the negotiate_calc MCP tool receives consent_to_verify_funds=true from the consumer.
    *
    * vsock (virtio-socket) is the communication channel between EC2 parent and Nitro Enclave
    *
@@ -447,150 +456,33 @@ export class CollectService {
     consumer_id: string,
     payment_amount: number,
   ): Promise<{ status: 'yes' | 'no' | 'cannot_confirm'; message: string }> {
-    const enclaveCid = process.env.CREDIT_CHECK_TEE_CID;
-    const enclavePort = process.env.CREDIT_CHECK_TEE_PORT;
+    const enclaveCid = process.env.BANK_TEE_CID;
+    const enclavePort = process.env.BANK_TEE_PORT;
 
-    // Fallback to mock if env vars not set (development mode)
     if (!enclaveCid || !enclavePort) {
-      console.warn('[vsock] CREDIT_CHECK_TEE_CID or CREDIT_CHECK_TEE_PORT not set, using mock verification');
-      return this.mockAwsEnclaveVerification(consumer_id, payment_amount);
+      throw new Error('BANK_TEE_CID and BANK_TEE_PORT must be set to reach the bank verification enclave');
     }
 
     console.log(`[vsock] Connecting to enclave CID=${enclaveCid} PORT=${enclavePort}`);
 
-    return new Promise((resolve, reject) => {
-      // Create vsock connection
-      // In Linux with vsock support, the address format is: vsock://<cid>:<port>
-      // Node.js net module doesn't directly support vsock, so we use AF_VSOCK via options
-      const socket = new net.Socket();
+    // Node.js net module doesn't natively support AF_VSOCK, so we use nc (netcat)
+    // with vsock support, the standard production approach for AWS Nitro Enclaves.
+    const request = JSON.stringify({ consumer_id, payment_amount });
+    const command = `echo '${request}' | nc --vsock ${enclaveCid} ${enclavePort}`;
 
-      let responseData = '';
-      const timeout = setTimeout(() => {
-        socket.destroy();
-        reject(new Error('Enclave connection timeout'));
-      }, 5000); // 5 second timeout
+    console.log(`[vsock] Executing: nc --vsock ${enclaveCid} ${enclavePort}`);
 
-      socket.on('data', (data) => {
-        responseData += data.toString();
-      });
-
-      socket.on('end', () => {
-        clearTimeout(timeout);
-        try {
-          const response = JSON.parse(responseData);
-          console.log(`[vsock] Enclave responded:`, response);
-          resolve({
-            status: response.status,
-            message: response.message || 'Verification completed',
-          });
-        } catch (error) {
-          reject(new Error(`Invalid JSON response from enclave: ${responseData}`));
-        }
-      });
-
-      socket.on('error', (error) => {
-        clearTimeout(timeout);
-        console.error(`[vsock] Socket error:`, error);
-        reject(error);
-      });
-
-      // Connect to vsock endpoint
-      // For vsock, we need to use a special address format
-      // On Linux with vsock kernel module loaded, connect using vsock://CID:PORT
-      // Since Node.js net.Socket doesn't natively support vsock, we use a workaround:
-      // 1. Use vsock-proxy (if available)
-      // 2. Or use a vsock npm package (requires installation)
-      // 3. Or fall back to HTTP over TCP proxy
-
-      try {
-        // Use nc (netcat) with vsock support to communicate with enclave
-        // This is the standard production approach for AWS Nitro Enclaves
-        const request = JSON.stringify({
-          consumer_id,
-          payment_amount,
-        });
-
-        // Execute nc command with vsock
-        // nc --vsock <cid> <port> sends data over vsock to the enclave
-        const command = `echo '${request}' | nc --vsock ${enclaveCid} ${enclavePort}`;
-
-        console.log(`[vsock] Executing: nc --vsock ${enclaveCid} ${enclavePort}`);
-
-        execAsync(command, { timeout: 5000 })
-          .then(({ stdout, stderr }) => {
-            clearTimeout(timeout);
-            if (stderr) {
-              console.warn(`[vsock] stderr:`, stderr);
-            }
-            try {
-              const response = JSON.parse(stdout.trim());
-              console.log(`[vsock] Enclave responded:`, response);
-              resolve({
-                status: response.status,
-                message: response.message || 'Verification completed',
-              });
-            } catch (parseError) {
-              console.error(`[vsock] Invalid JSON from enclave:`, stdout);
-              reject(new Error(`Invalid JSON response from enclave: ${stdout}`));
-            }
-          })
-          .catch((execError) => {
-            clearTimeout(timeout);
-            console.error(`[vsock] Exec error:`, execError);
-            // Fallback to mock on error
-            console.warn(`[vsock] Falling back to mock verification`);
-            this.mockAwsEnclaveVerification(consumer_id, payment_amount)
-              .then(resolve)
-              .catch(reject);
-          });
-
-      } catch (error) {
-        clearTimeout(timeout);
-        socket.destroy();
-        console.warn(`[vsock] Connection failed, falling back to mock:`, error);
-        // Fallback to mock
-        resolve(this.mockAwsEnclaveVerification(consumer_id, payment_amount));
-      }
-    });
-  }
-
-  /**
-   * Mock AWS Enclave verification (development/testing fallback)
-   * Used when CREDIT_CHECK_TEE_CID/PORT environment variables are not set
-   *
-   * Simulates enclave responses:
-   * - 70% chance: sufficient funds (yes)
-   * - 20% chance: insufficient funds (no)
-   * - 10% chance: cannot verify (cannot_confirm)
-   */
-  private async mockAwsEnclaveVerification(
-    consumer_id: string,
-    payment_amount: number,
-  ): Promise<{ status: 'yes' | 'no' | 'cannot_confirm'; message: string }> {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    // Mock logic: randomly determine coverage
-    const random = Math.random();
-
-    if (random < 0.7) {
-      // 70% chance: sufficient funds
-      return {
-        status: 'yes',
-        message: `Funds verified for $${payment_amount.toLocaleString()} payment`,
-      };
-    } else if (random < 0.9) {
-      // 20% chance: insufficient funds
-      return {
-        status: 'no',
-        message: `Insufficient funds for $${payment_amount.toLocaleString()} payment`,
-      };
-    } else {
-      // 10% chance: cannot confirm (bank API down, account closed, etc.)
-      return {
-        status: 'cannot_confirm',
-        message: 'Unable to verify account status at this time',
-      };
+    const { stdout, stderr } = await execAsync(command, { timeout: 5000 });
+    if (stderr) {
+      console.warn(`[vsock] stderr:`, stderr);
     }
+
+    const response = JSON.parse(stdout.trim());
+    console.log(`[vsock] Enclave responded:`, response);
+
+    return {
+      status: response.status,
+      message: response.message || 'Verification completed',
+    };
   }
 }
