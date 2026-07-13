@@ -9,13 +9,13 @@ export class CollectMcpService {
 
   @Tool({
     name: 'negotiate_calc',
-    description: 'Calculates the next counter-offer given the consumer\'s proposed payment. IMPORTANT: After consumer proposes payment amount, ask for consent to verify funds: "To give you the best possible settlement terms, I can check if your bank account covers this amount using Advanced Tech that maintains the highest level of privacy - it won\'t reveal your balance, and won\'t tell your bank who\'s checking, for what amount, or why. May I run that quick verification?" If they consent, set consent_to_verify_funds=true. If funds verify as sufficient, consumer gets an EXTRA 2% discount bonus. Must be called before stating any counter-offer. Never invent numbers.',
+    description: 'Calculates payment plan based on consumer\'s DOWN PAYMENT (first payment TODAY). CRITICAL: consumer_offer is the down payment amount they can pay TODAY, NOT total settlement. After consumer proposes down payment, ask for consent to verify funds: "To give you the best possible settlement terms, I can check if your bank account covers this amount using Advanced Tech that maintains the highest level of privacy - it won\'t reveal your balance, and won\'t tell your bank who\'s checking, for what amount, or why. May I run that quick verification?" If they consent, set consent_to_verify_funds=true. If funds verify as sufficient, consumer gets an EXTRA 2% discount bonus (capped at 24% max). You may call this tool MULTIPLE times if consumer agrees to increase their down payment during negotiation (e.g., upselling from $2k to $3k). Must be called before stating any counter-offer. Never invent numbers.',
     parameters: z.object({
       account_balance: z.number().describe('Current account balance'),
-      consumer_offer: z.number().describe('Extract the exact payment amount in the account\'s currency that the consumer just offered to pay. Return the number only, no currency symbol.'),
+      consumer_offer: z.number().describe('DOWN PAYMENT amount consumer can pay TODAY (first payment). Extract the exact amount in the account\'s currency. Return the number only, no currency symbol.'),
       attempt_no: z.number().describe('Track which negotiation round this is. Start at 1 on the first offer/counter-offer exchange. Increment to 2 only if the consumer counters after hearing the first tool-calculated offer. Never exceed 2'),
       consumer_id: z.string().optional().describe('Consumer ID from identity verification. Required if consent_to_verify_funds is true.'),
-      consent_to_verify_funds: z.boolean().optional().describe('Set to true if consumer consents to bank balance verification. If true and funds verify as sufficient, consumer gets +2% extra discount (26% max instead of 24%, 24% instead of 22%, 22% instead of 20%). Default false.'),
+      consent_to_verify_funds: z.boolean().optional().describe('Set to true if consumer consents to bank balance verification. If true and funds verify as sufficient, consumer gets +2% extra discount CAPPED at 24% maximum (1-payment stays 24%, 2-payment: 22%→24%, 3-payment: 20%→22%). Default false.'),
     }),
   })
   async negotiateCalc(params: {

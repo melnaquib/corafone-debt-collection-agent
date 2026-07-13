@@ -128,17 +128,47 @@ The consumer offers what they can pay TODAY as a DOWN PAYMENT. Based on their do
 4. **Below Floor (down payment < 25% of balance)**: REJECTED
    - Plan type: `below_floor`
    - Counter with 25% minimum
-   - **Example:** $6,000 balance, consumer offers $1,000 down (17%)
-     - **REJECTED** - below $1,500 minimum (25%)
+   - **Example 1:** $6,000 balance, consumer offers $1,000 down (17%)
+     - Bank balance check: yes
+     - **REJECTED** - $1,000 < $1,500 minimum (25%)
      - Ask consumer to increase to at least $1,500
    - Edge: e9 routes to `no_agreement` node
 
 ### Key Points:
 - **consumer_offer = DOWN PAYMENT** (first payment made TODAY)
-- Agent should try to MAXIMIZE the down payment within conversation
-- Higher down payment → Better discount tier
+- **Agent ALWAYS tries to MAXIMIZE down payment** through tier-based upselling
+- **Negotiation strategy**: Start at tier closest to customer's offer, then upsell to better tiers
+- Higher down payment → Better discount tier:
+  - ≥76% down → 1 payment, 24% discount (best)
+  - ≥50% down → 2 payments, 22% discount (24% if verified)
+  - ≥25% down → 3 payments, 20% discount (22% if verified)
 - 25% floor = minimum down payment
 - Remaining balance after down payment is split across remaining installments
+
+### Tier-Based Upselling Strategy:
+
+**Example 2: $5,000 balance, customer offers $2,000 (40%), bank verified**
+
+**Initial State:**
+- Customer offers: $2,000 (40% of balance)
+- This qualifies for: 3-payment tier (≥25%)
+- Bank balance check: Verified ✓
+
+**Agent's Upselling Attempts (in order):**
+
+1. **Try for 1-payment tier:**
+   - Agent: "Is there ANY way you could pay $3,800 TODAY? That settles it completely with 24% off and you're DONE!"
+   - If customer agrees → Payment: [$3,800] (24% discount)
+
+2. **Try for 2-payment tier:**
+   - Agent: "Could you do $3,000 TODAY? That's just 2 payments with 22% off!"
+   - If customer agrees to $3,000 → Payments: [$3,000 down, $900 later] = $3,900 total (22% discount)
+
+3. **Accept 3-payment tier:**
+   - Agent: "Okay, with $2,000 TODAY we can do 3 payments"
+   - If customer stays at $2,000 → Payments: [$2,000 down, $1,000, $1,000] = $4,000 total (20% discount)
+
+**Key:** Agent ALWAYS starts from customer's tier and tries to upsell UP to better tiers (fewer payments, better discount). If customer increases their down payment, agent recalculates with new amount.
 
 ### ABSOLUTE LIMITS (enforced by custom guardrails):
 - **MAX discount**: 24% (NEVER offer 25%, 30%, 40% or higher)
