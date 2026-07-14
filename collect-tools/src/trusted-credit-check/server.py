@@ -18,8 +18,9 @@ RES_NO = "0"
 RES_YES = "1"
 RES_ERR = "2"
 
-def credit_ceck(amount):
-    res = RES_YES if amount >= SECRET_BANK_ACCOUNT_BALANCE else RES_NO
+def credit_check(amount):
+    # Check if balance COVERS the amount (not if amount exceeds balance)
+    res = RES_YES if SECRET_BANK_ACCOUNT_BALANCE >= amount else RES_NO
     return res
 
 class VsockListener:
@@ -43,15 +44,16 @@ class VsockListener:
                     data = from_client.recv(1024).decode()
                     if not data:
                         break
-                    res = credit_ceck(int(data.strip()))
+                    res = credit_check(int(data.strip()))
                     print(f"{data} -> {res}", end='', flush=True)
-                    self.sock.sendall(res.encode())
-                    self.sock.flush()
+                    # Send on CLIENT socket, not listening socket
+                    from_client.sendall(res.encode())
                     print()
                     from_client.close()
+                    break  # Exit loop after processing one request
 
             except socket.error as e:
-                print("Socket error: {e}")
+                print(f"Socket error: {e}")
             except Exception as e:
                 print(f"Error: {e}")
 
