@@ -528,7 +528,7 @@ ADD URGENCY:
 
 ### Node: no_agreement
 
-**Purpose:** Handle rejection or below-floor offers
+**Purpose:** Handle rejection or below-floor offer
 
 ```
 SCENARIOS:
