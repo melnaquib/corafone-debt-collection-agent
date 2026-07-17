@@ -40,6 +40,13 @@ if (mainPrompt) {
   console.log('✓ Updated main agent prompt');
 }
 
+// Update first message (greeting)
+const firstMessage = extractPrompt(promptsContent, 'First Message \\(Greeting\\)');
+if (firstMessage) {
+  agentConfig.conversation_config.agent.first_message = firstMessage;
+  console.log('✓ Updated first message (greeting)');
+}
+
 // Update workflow node prompts
 const nodes = {
   'Node: disclosure_identity': 'disclosure_identity',
